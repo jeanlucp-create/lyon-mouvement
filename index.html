@@ -29,14 +29,14 @@
     /* ── HEADER ── */
     .header{background:var(--cream);padding:14px 16px 0;flex-shrink:0;position:relative;overflow:hidden;border-bottom:1px solid var(--orange-border)}
     .header-map-bg{position:absolute;right:-8px;top:-8px;opacity:.1;pointer-events:none}
-    .header-top{display:flex;align-items:center;gap:10px;position:relative;z-index:1;margin-bottom:10px}
+    .header-top{display:flex;align-items:center;gap:10px;position:relative;z-index:1;margin-bottom:3px}
     .header-logo{width:44px;height:44px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,#FF6B35,#FF9B35);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,53,.3)}
     .header-title{font-size:19px;font-weight:900;color:var(--text);letter-spacing:-.4px;line-height:1}
     .header-title span{color:var(--orange)}
-    .header-sub{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+    .header-sub{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;position:relative;z-index:1}
 
     /* Toggle mode Stationnement / Déplacement */
-    .mode-toggle{margin-left:auto;display:flex;align-items:center;gap:0;border:1.5px solid var(--orange-border);border-radius:100px;overflow:hidden;flex-shrink:0;background:var(--white)}
+    .mode-toggle{margin-left:16px;display:flex;align-items:center;gap:0;border:1.5px solid var(--orange-border);border-radius:100px;overflow:hidden;flex-shrink:0;background:var(--white)}
     .mode-toggle-btn{padding:5px 11px;font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s;white-space:nowrap}
     .mode-toggle-btn.active{background:var(--orange);color:white}
 
@@ -137,9 +137,9 @@
     .vv-near-dist{font-size:11px;font-weight:900;color:var(--orange);font-family:'Space Mono',monospace;flex-shrink:0}
     .nav-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;background:var(--orange);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;padding:13px;border-radius:12px;text-decoration:none;letter-spacing:.04em;margin-bottom:8px;border:none;cursor:pointer}
     .nav-btn:active{opacity:.85}
-    .btn-row{display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:8px}
+    .btn-row{display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:8px}
     .tcl-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:12px 14px;border-radius:12px;text-decoration:none;cursor:pointer}
-    .map-det-btn{display:flex;align-items:center;justify-content:center;gap:5px;background:var(--surface);color:var(--muted);border:1.5px solid var(--border);padding:12px 13px;border-radius:12px;cursor:pointer;font-size:11px;font-weight:800;font-family:'Nunito',sans-serif;white-space:nowrap}
+    .map-det-btn{display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--muted);border:1.5px solid var(--border);padding:12px 14px;border-radius:12px;cursor:pointer;font-size:16px;font-family:'Nunito',sans-serif}
     .tcl-btn:active,.map-det-btn:active{opacity:.8}
     .det-footer{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
     .upd-time{font-size:9px;color:var(--muted);font-weight:600}
@@ -202,16 +202,14 @@
         <line x1="4" y1="14" x2="24" y2="14" stroke="white" stroke-width="1.5" opacity=".5"/>
       </svg>
     </div>
-    <div>
-      <div class="header-title">Me rendre <span>à Lyon</span></div>
-      <div class="header-sub">Mobilité urbaine · Temps réel</div>
-    </div>
+    <div class="header-title">Me rendre <span>à Lyon</span></div>
     <!-- Toggle Stationnement / Déplacement -->
     <div class="mode-toggle">
       <button class="mode-toggle-btn active" id="mode-stat" onclick="switchMode('stat')">Stationnement</button>
       <button class="mode-toggle-btn" id="mode-dep" onclick="switchMode('dep')">Déplacements</button>
     </div>
   </div>
+  <div class="header-sub">Mobilité urbaine · Temps réel</div>
 
   <!-- ONGLETS (selon le mode) -->
   <div class="tabs" id="tabs-stat">
@@ -219,8 +217,8 @@
     <div class="tab" id="tab-pk" onclick="switchSub('pk')">🅿 LPA · Indigo · Q-Park</div>
   </div>
   <div class="tabs" id="tabs-dep" style="display:none">
-    <div class="tab active" id="tab-tcl" onclick="switchSub('tcl')">🚇 TCL</div>
-    <div class="tab" id="tab-vv" onclick="switchSub('vv')">🚲 Vélo'v</div>
+    <div class="tab active" id="tab-vv" onclick="switchSub('vv')">🚲 Vélo'v</div>
+    <div class="tab" id="tab-tcl" onclick="switchSub('tcl')">🚇 TCL</div>
     <div class="tab" id="tab-ap" onclick="switchSub('ap')">🚗 Autopartage</div>
   </div>
 
@@ -333,15 +331,15 @@
         </div>
       </div>
 
-      <a id="nav-btn" class="nav-btn" href="#" target="_blank" rel="noopener">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-        S'y rendre
-      </a>
       <div class="btn-row">
-        <a id="tcl-det-btn" class="tcl-btn" href="https://www.tcl.fr/itineraires" target="_blank" rel="noopener">
-          🚇 Calculer mon itinéraire TCL
+        <a id="nav-btn" class="nav-btn" href="#" target="_blank" rel="noopener" style="margin-bottom:0">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          S'y rendre
         </a>
-        <button id="map-det-btn" class="map-det-btn" onclick="showOnMap()">🗺 Carte</button>
+        <a id="tcl-det-btn" class="tcl-btn" href="https://www.tcl.fr/itineraires" target="_blank" rel="noopener">
+          🚇 TCL
+        </a>
+        <button id="map-det-btn" class="map-det-btn" onclick="showOnMap()">🗺</button>
       </div>
       <div class="det-footer">
         <div class="upd-time" id="det-upd">—</div>
@@ -401,11 +399,11 @@ function fmtDate(s){
 function getStatus(nb,cap){
   if(nb===null||nb===undefined||nb<0) return {lbl:'Données indisponibles',c:'gray',pct:0};
   if(nb===0) return {lbl:'Complet',c:'red',pct:0};
-  if(!cap) return {lbl:'Disponible',c:'green',pct:80};
-  const p=nb/cap;
-  if(p<=.15) return {lbl:'Presque plein',c:'red',pct:Math.round(p*100)};
-  if(p<=.4) return {lbl:'Limité',c:'amber',pct:Math.round(p*100)};
-  return {lbl:'Disponible',c:'green',pct:Math.round(p*100)};
+  // Seuils absolus : 0-15 rouge, 16-30 orange, >30 vert
+  const pct=cap?Math.round(nb/cap*100):80;
+  if(nb<=15) return {lbl:'Presque plein',c:'red',pct};
+  if(nb<=30) return {lbl:'Limité',c:'amber',pct};
+  return {lbl:'Disponible',c:'green',pct};
 }
 function gIcon(g){
   return g==='TCL'?{l:'TCL',c:'g-tcl'}:g==='LPA'?{l:'LPA',c:'g-lpa'}:g==='INDIGO'?{l:'IND',c:'g-ind'}:{l:'Q',c:'g-qpk'};
@@ -434,7 +432,7 @@ function switchMode(m){
   document.getElementById('tabs-dep').style.display=m==='dep'?'flex':'none';
   // Onglet par défaut selon mode
   if(m==='stat') switchSub('pr');
-  else switchSub('tcl');
+  else switchSub('vv');
 }
 
 function switchSub(s){
@@ -500,7 +498,7 @@ function renderList(){
           <div><div class="tcl-link-left">Calculer mon itinéraire TCL</div><div class="tcl-link-sub">Horaires, lignes, perturbations — tcl.fr</div></div>
           <div class="tcl-link-arrow">→</div>
         </a>
-        <a href="https://www.tcl.fr/plans" target="_blank" rel="noopener" class="tcl-link-item">
+        <a href="https://www.tcl.fr/se-deplacer/plans-pdf-du-reseau" target="_blank" rel="noopener" class="tcl-link-item">
           <div><div class="tcl-link-left">Plan du réseau TCL</div><div class="tcl-link-sub">Métro, tram, bus, funiculaire</div></div>
           <div class="tcl-link-arrow">→</div>
         </a>
@@ -512,7 +510,7 @@ function renderList(){
   let list=[];
   if(sub==='pr') list=data.parkings?.tcl||[];
   else if(sub==='pk') list=data.parkings?.operateurs||[];
-  else if(sub==='vv') list=data.velov||[];
+  else if(sub==='vv') list=(data.velov||[]).filter(v=>v.nom&&v.nom.trim()!=='');
   else if(sub==='ap') list=[...(data.autopartage?.citiz||[]),...(data.autopartage?.leoandgo||[])];
 
   if(q) list=list.filter(p=>(p.nom||'').toLowerCase().includes(q)||(p.adresse||'').toLowerCase().includes(q));
@@ -696,6 +694,8 @@ function updateDetail(p){
   metaEl.textContent=meta; metaEl.style.color=old?'var(--red)':'var(--muted)';
   const navBtn=document.getElementById('nav-btn');
   const mapDetBtn=document.getElementById('map-det-btn');
+  const tclDetBtn=document.getElementById('tcl-det-btn');
+  tclDetBtn.style.display=(type==='velov'||type==='leo'||type==='citiz')?'none':'flex';
   if(p.lat&&p.lng){
     navBtn.href=`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=driving`;
     navBtn.style.opacity='1'; navBtn.style.pointerEvents='auto';
@@ -704,9 +704,6 @@ function updateDetail(p){
     navBtn.href='#'; navBtn.style.opacity='.4'; navBtn.style.pointerEvents='none';
     mapDetBtn.style.display='none';
   }
-  const tclDetBtn=document.getElementById('tcl-det-btn');
-  tclDetBtn.style.display=(type==='velov'||type==='leo'||type==='citiz')?'none':'flex';
-  document.getElementById('det-upd').textContent='';
   if(type==='parking'){
     const nb=p.places_disponibles,cap=p.nb_places,s=getStatus(nb,cap),isOp=p.gestionnaire!=='TCL';
     document.getElementById('det-num').textContent=(nb===null||nb<0)?'—':nb;
@@ -730,7 +727,7 @@ function updateDetail(p){
     else hc.style.display='none';
     const vvn=document.getElementById('sec-vv-near');
     if(p.lat&&p.lng&&data.velov?.length){
-      const nearest=(data.velov||[]).filter(v=>v.en_service)
+      const nearest=(data.velov||[]).filter(v=>v.en_service&&v.nom&&v.nom.trim()!=='')
         .map(v=>({...v,d:dist(p.lat,p.lng,v.lat,v.lng)})).sort((a,b)=>a.d-b.d)[0];
       if(nearest){
         vvn.style.display='block';
@@ -779,7 +776,7 @@ function renderMap(){
     const nb=p.places_disponibles,cap=p.nb_places,s=getStatus(nb,cap);
     addM(p.lat,p.lng,colHex(s.c),24,String(nb===null||nb<0?'?':nb),p.nom,s.lbl,'parking');
   });
-  if(mapLayers.vv)(data.velov||[]).filter(v=>v.en_service).forEach(v=>{
+  if(mapLayers.vv)(data.velov||[]).filter(v=>v.en_service&&v.nom&&v.nom.trim()!=='').forEach(v=>{
     if(!v.lat||!v.lng) return;
     addM(v.lat,v.lng,v.velos_dispo>0?colHex('green'):colHex('gray'),22,String(v.velos_dispo),'🚲 '+v.nom,v.velos_dispo+' vélos','velov');
   });
