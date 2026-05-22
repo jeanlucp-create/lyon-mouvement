@@ -341,6 +341,10 @@
         </a>
         <button id="map-det-btn" class="map-det-btn" onclick="showOnMap()">🗺</button>
       </div>
+      <a id="partir-btn" class="nav-btn" href="#" target="_blank" rel="noopener" style="display:none;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Partir d'ici
+      </a>
       <div class="det-footer">
         <div class="upd-time" id="det-upd">—</div>
         <button class="ref-btn" id="ref-btn" onclick="refreshDetail()">
@@ -695,14 +699,20 @@ function updateDetail(p){
   const navBtn=document.getElementById('nav-btn');
   const mapDetBtn=document.getElementById('map-det-btn');
   const tclDetBtn=document.getElementById('tcl-det-btn');
-  tclDetBtn.style.display=(type==='velov'||type==='leo'||type==='citiz')?'none':'flex';
+  const partirBtn=document.getElementById('partir-btn');
+  const isDepl=(type==='velov'||type==='citiz'||type==='leo');
+  tclDetBtn.style.display=isDepl?'none':'flex';
   if(p.lat&&p.lng){
     navBtn.href=`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=driving`;
     navBtn.style.opacity='1'; navBtn.style.pointerEvents='auto';
     mapDetBtn.style.display='flex';
+    // "Partir d'ici" : depuis ce point, choisir son mode de transport
+    partirBtn.style.display='flex';
+    partirBtn.href=`https://www.google.com/maps/dir/?api=1&origin=${p.lat},${p.lng}`;
   }else{
     navBtn.href='#'; navBtn.style.opacity='.4'; navBtn.style.pointerEvents='none';
     mapDetBtn.style.display='none';
+    partirBtn.style.display='none';
   }
   if(type==='parking'){
     const nb=p.places_disponibles,cap=p.nb_places,s=getStatus(nb,cap),isOp=p.gestionnaire!=='TCL';
