@@ -707,16 +707,9 @@ function updateDetail(p){
     navBtn.href=`geo:${p.lat},${p.lng}?q=${encodeURIComponent(p.nom)}`;
     navBtn.style.opacity='1'; navBtn.style.pointerEvents='auto';
     mapDetBtn.style.display='flex';
-    // "Partir d'ici" — point de départ universel
-    // iOS Plans: maps://maps.apple.com/?saddr=lat,lng&saddrname=Nom
-    // Android/autres: https://maps.google.com/maps?saddr=lat,lng (fallback)
-    // On utilise un lien qui détecte la plateforme
-    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
-    const nomEnc=encodeURIComponent(p.nom);
+    // "Partir d'ici" — ouvre le GPS positionné sur le lieu, champs vides
     partirBtn.style.display='flex';
-    partirBtn.href=isIOS
-      ?`maps://maps.apple.com/?saddr=${p.lat},${p.lng}&saddrname=${nomEnc}`
-      :`https://maps.google.com/maps?saddr=${p.lat},${p.lng}&saddr_label=${nomEnc}`;
+    partirBtn.href=`geo:${p.lat},${p.lng}`;
   }else{
     navBtn.href='#'; navBtn.style.opacity='.4'; navBtn.style.pointerEvents='none';
     mapDetBtn.style.display='none';
