@@ -137,7 +137,8 @@
     .vv-near-dist{font-size:11px;font-weight:900;color:var(--orange);font-family:'Space Mono',monospace;flex-shrink:0}
     .nav-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;background:var(--orange);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;padding:13px;border-radius:12px;text-decoration:none;letter-spacing:.04em;margin-bottom:8px;border:none;cursor:pointer}
     .nav-btn:active{opacity:.85}
-    .btn-row{display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:8px}
+    .btn-row{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;margin-bottom:8px}
+    .vv-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:12px 14px;border-radius:12px;text-decoration:none;cursor:pointer}
     .tcl-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:12px 14px;border-radius:12px;text-decoration:none;cursor:pointer}
     .map-det-btn{display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--muted);border:1.5px solid var(--border);padding:12px 14px;border-radius:12px;cursor:pointer;font-size:16px;font-family:'Nunito',sans-serif}
     .copy-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:var(--surface);color:var(--muted);border:1.5px solid var(--border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:11px;border-radius:12px;cursor:pointer;margin-bottom:8px;transition:all .2s}
@@ -339,6 +340,9 @@
         </a>
         <a id="tcl-det-btn" class="tcl-btn" href="https://www.tcl.fr/itineraires" target="_blank" rel="noopener">
           🚇 TCL
+        </a>
+        <a id="vv-det-btn" class="vv-btn" href="https://velov.grandlyon.com" target="_blank" rel="noopener" style="display:none">
+          🚲 Vélo'v
         </a>
         <button id="map-det-btn" class="map-det-btn" onclick="showOnMap()">🗺</button>
       </div>
@@ -707,8 +711,12 @@ function updateDetail(p){
   const navBtn=document.getElementById('nav-btn');
   const mapDetBtn=document.getElementById('map-det-btn');
   const tclDetBtn=document.getElementById('tcl-det-btn');
+  const vvDetBtn=document.getElementById('vv-det-btn');
   const isDepl=(type==='velov'||type==='citiz'||type==='leo');
+  // TCL : visible sur parking uniquement
   tclDetBtn.style.display=isDepl?'none':'flex';
+  // Vélo'v : visible sur parking (station proche) + fiche velov
+  vvDetBtn.style.display=(type==='parking'||type==='velov')?'flex':'none';
   if(p.lat&&p.lng){
     // "S'y rendre" — destination universelle (geo: fonctionne sur iOS/Android/autres)
     navBtn.href=`geo:${p.lat},${p.lng}?q=${encodeURIComponent(p.nom)}`;
