@@ -140,7 +140,8 @@
     .btn-row{display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:8px}
     .tcl-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:12px 14px;border-radius:12px;text-decoration:none;cursor:pointer}
     .map-det-btn{display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--muted);border:1.5px solid var(--border);padding:12px 14px;border-radius:12px;cursor:pointer;font-size:16px;font-family:'Nunito',sans-serif}
-    .tcl-btn:active,.map-det-btn:active{opacity:.8}
+    .copy-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:var(--surface);color:var(--muted);border:1.5px solid var(--border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:11px;border-radius:12px;cursor:pointer;margin-bottom:8px;transition:all .2s}
+    .copy-btn.copied{background:var(--green);color:white;border-color:var(--green)}
     .det-footer{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
     .upd-time{font-size:9px;color:var(--muted);font-weight:600}
     .ref-btn{background:var(--orange-light);border:1.5px solid var(--orange-border);color:var(--orange-dark);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;padding:7px 13px;border-radius:100px;cursor:pointer;display:flex;align-items:center;gap:5px}
@@ -341,10 +342,11 @@
         </a>
         <button id="map-det-btn" class="map-det-btn" onclick="showOnMap()">🗺</button>
       </div>
-      <a id="partir-btn" class="nav-btn" href="#" target="_blank" rel="noopener" style="display:none;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Partir d'ici
-      </a>
+      <button id="copy-btn" class="copy-btn" onclick="copyAddress()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copier l'adresse
+      </button>
+
       <div class="det-footer">
         <div class="upd-time" id="det-upd">—</div>
         <button class="ref-btn" id="ref-btn" onclick="refreshDetail()">
@@ -536,8 +538,13 @@ function renderList(){
     }
   }else if(sub==='vv'){
     const open=list.filter(v=>v.velos_dispo>0).length;
-    html+=`<div class="sec-lbl">🚲 Vélo'v · ${open} stations avec vélos</div><div class="parking-list">`;
-    list.forEach(v=>html+=vvHTML(v)); html+=`</div>`;
+    const favs=list.filter(v=>isFav(v.id)),rest=list.filter(v=>!isFav(v.id));
+    if(favs.length){
+      html+=`<div class="sec-lbl">★ Favoris</div><div class="parking-list">`;
+      favs.forEach(v=>html+=vvHTML(v)); html+=`</div>`;
+    }
+    html+=`<div class="sec-lbl${favs.length?' sec-lbl-gray':''}">🚲 Vélo'v · ${open} stations avec vélos</div><div class="parking-list">`;
+    rest.forEach(v=>html+=vvHTML(v)); html+=`</div>`;
   }else if(sub==='ap'){
     const citiz=(data.autopartage?.citiz||[]).filter(v=>v.vehicules_dispo>0);
     const leo=data.autopartage?.leoandgo||[];
@@ -575,8 +582,9 @@ function pHTML(p){
 
 function vvHTML(v){
   const ok=v.en_service&&v.velos_dispo>0;
-  return `<div class="parking-item" onclick="showDetail('${v.id}','velov')">
-    <div style="width:40px;height:40px;flex-shrink:0"></div>
+  const fav=isFav(v.id);
+  return `<div class="parking-item ${fav?'favori':''}" onclick="showDetail('${v.id}','velov')">
+    <button class="star-btn ${fav?'on':''}" onclick="toggleFav('${v.id}',event)" ontouchend="toggleFav('${v.id}',event)">${fav?'★':'☆'}</button>
     <div class="p-icon g-vv">🚲</div>
     <div class="p-info">
       <div class="p-name">${v.nom}</div>
@@ -699,7 +707,6 @@ function updateDetail(p){
   const navBtn=document.getElementById('nav-btn');
   const mapDetBtn=document.getElementById('map-det-btn');
   const tclDetBtn=document.getElementById('tcl-det-btn');
-  const partirBtn=document.getElementById('partir-btn');
   const isDepl=(type==='velov'||type==='citiz'||type==='leo');
   tclDetBtn.style.display=isDepl?'none':'flex';
   if(p.lat&&p.lng){
@@ -707,13 +714,9 @@ function updateDetail(p){
     navBtn.href=`geo:${p.lat},${p.lng}?q=${encodeURIComponent(p.nom)}`;
     navBtn.style.opacity='1'; navBtn.style.pointerEvents='auto';
     mapDetBtn.style.display='flex';
-    // "Partir d'ici" — ouvre le GPS positionné sur le lieu, champs vides
-    partirBtn.style.display='flex';
-    partirBtn.href=`geo:${p.lat},${p.lng}`;
   }else{
     navBtn.href='#'; navBtn.style.opacity='.4'; navBtn.style.pointerEvents='none';
     mapDetBtn.style.display='none';
-    partirBtn.style.display='none';
   }
   if(type==='parking'){
     const nb=p.places_disponibles,cap=p.nb_places,s=getStatus(nb,cap),isOp=p.gestionnaire!=='TCL';
@@ -841,7 +844,36 @@ function showOnMap(){
   },250);
 }
 
-// Init
+// ── COPIER ADRESSE ──
+function copyAddress(){
+  if(!selected) return;
+  const btn=document.getElementById('copy-btn');
+  // Construire le texte à copier : nom + adresse si disponible
+  let txt=selected.nom;
+  if(selected.adresse) txt+=', '+selected.adresse;
+  else txt+=', Lyon';
+  navigator.clipboard.writeText(txt).then(()=>{
+    btn.textContent='✓ Adresse copiée !';
+    btn.classList.add('copied');
+    setTimeout(()=>{
+      btn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copier l'adresse`;
+      btn.classList.remove('copied');
+    },5000);
+  }).catch(()=>{
+    // Fallback pour les navigateurs qui ne supportent pas clipboard API
+    const el=document.createElement('textarea');
+    el.value=txt; el.style.position='fixed'; el.style.opacity='0';
+    document.body.appendChild(el); el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    btn.textContent='✓ Adresse copiée !';
+    btn.classList.add('copied');
+    setTimeout(()=>{
+      btn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copier l'adresse`;
+      btn.classList.remove('copied');
+    },5000);
+  });
+}
 switchMode('stat');
 loadData();
 setInterval(()=>{if(!selected) loadData();},120000);
