@@ -872,22 +872,21 @@ function showOnMap(){
 function openTCL(e){
   if(e) e.preventDefault();
   const fallback='https://www.tcl.fr/itineraires';
-  // Tenter d'ouvrir l'app TCL via deep link
   const appUrl='tcl://itineraires';
-  const start=Date.now();
-  // Créer un iframe invisible pour tenter le deep link sans quitter la page
-  const iframe=document.createElement('iframe');
-  iframe.style.display='none';
-  iframe.src=appUrl;
-  document.body.appendChild(iframe);
-  // Si l'app ne répond pas dans 600ms → ouvrir le site
-  setTimeout(()=>{
-    document.body.removeChild(iframe);
-    // Si la page est toujours visible (app non ouverte), fallback site
-    if(Date.now()-start < 1500){
-      window.open(fallback,'_blank');
-    }
-  },600);
+  // Sur mobile, window.location déclenche le deep link sans quitter la page
+  // Si l'app n'est pas installée, on tombe sur une erreur silencieuse
+  // Le fallback s'ouvre après 1500ms si l'app n'a pas pris la main
+  let appOpened=false;
+  window.location=appUrl;
+  const fallbackTimer=setTimeout(()=>{
+    if(!appOpened) window.open(fallback,'_blank');
+  },1500);
+  // Si l'app s'ouvre, la page perd le focus → on annule le fallback
+  window.addEventListener('blur',function onBlur(){
+    appOpened=true;
+    clearTimeout(fallbackTimer);
+    window.removeEventListener('blur',onBlur);
+  });
 }
 function copyAddress(){
   if(!selected) return;
