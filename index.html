@@ -107,7 +107,7 @@
     .detail-view{position:absolute;inset:0;background:var(--cream);overflow-y:auto;display:none;z-index:100;padding:12px 16px 32px;-webkit-overflow-scrolling:touch}
     .back-btn{display:inline-flex;align-items:center;gap:7px;background:var(--white);border:1.5px solid var(--orange-border);color:var(--orange-dark);font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;padding:7px 14px;border-radius:100px;cursor:pointer;margin-bottom:14px}
     .det-card{background:var(--white);border-radius:18px;border:1.5px solid var(--border);padding:20px;margin-bottom:10px}
-    .det-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+    .det-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
     .det-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
     .det-name{font-size:19px;font-weight:900;line-height:1.1;letter-spacing:-.3px;margin-bottom:3px}
     .det-meta{font-size:9px;color:var(--muted);font-weight:600;line-height:1.4}
@@ -140,7 +140,7 @@
     .btn-row{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;margin-bottom:8px}
     .vv-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:12px 14px;border-radius:12px;text-decoration:none;cursor:pointer}
     .tcl-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:12px 14px;border-radius:12px;text-decoration:none;cursor:pointer}
-    .map-det-btn{display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--muted);border:1.5px solid var(--border);padding:12px 14px;border-radius:12px;cursor:pointer;font-size:16px;font-family:'Nunito',sans-serif}
+    .map-det-btn{display:flex;align-items:center;justify-content:center;gap:5px;background:var(--surface2);color:var(--muted);border:1.5px solid var(--border);padding:7px 10px;border-radius:10px;cursor:pointer;font-size:11px;font-weight:800;font-family:Nunito,sans-serif;white-space:nowrap;flex-shrink:0}
     .copy-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:var(--surface);color:var(--muted);border:1.5px solid var(--border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:11px;border-radius:12px;cursor:pointer;margin-bottom:8px;transition:all .2s}
     .copy-btn.copied{background:var(--green);color:white;border-color:var(--green)}
     .det-footer{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
@@ -262,12 +262,17 @@
       Retour
     </button>
     <div class="det-card">
+      <!-- EN-TÊTE : icône + nom + bouton Voir la carte -->
       <div class="det-header">
         <div class="det-icon" id="det-icon"></div>
         <div style="flex:1;min-width:0">
           <div class="det-name" id="det-name"></div>
           <div class="det-meta" id="det-meta"></div>
         </div>
+        <button id="map-det-btn" class="map-det-btn" onclick="showOnMap()" style="display:none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Voir la carte
+        </button>
       </div>
       <div id="det-err"></div>
 
@@ -299,6 +304,7 @@
             <div class="info-text" id="det-horaires"></div>
           </div>
         </div>
+        <!-- Bloc Vélo'v avec bouton Réserver intégré -->
         <div class="vv-near" id="sec-vv-near" style="display:none">
           <div class="vv-near-title">🚲 Station Vélo'v la plus proche</div>
           <div class="vv-near-row">
@@ -308,6 +314,9 @@
               <div class="vv-badges" id="vn-badges" style="margin-top:3px"></div>
             </div>
             <div class="vv-near-dist" id="vn-dist">—</div>
+            <a id="vv-near-btn" class="vv-btn" href="https://velov.grandlyon.com" target="_blank" rel="noopener" style="margin-left:8px;padding:6px 10px;font-size:11px">
+              🚲 Réserver
+            </a>
           </div>
         </div>
       </div>
@@ -333,25 +342,25 @@
         </div>
       </div>
 
+      <!-- BOUTONS : S'y rendre | Copier | TCL ou Réserver Vélo'v -->
       <div class="btn-row">
         <a id="nav-btn" class="nav-btn" href="#" target="_blank" rel="noopener" style="margin-bottom:0">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
           S'y rendre
         </a>
-        <a id="tcl-det-btn" class="tcl-btn" href="#" onclick="openTCL(event)" rel="noopener">
+        <button id="copy-btn" class="copy-btn" onclick="copyAddress()" style="margin-bottom:0;padding:12px 13px;width:auto">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copier
+        </button>
+        <a id="tcl-det-btn" class="tcl-btn" href="#" onclick="openTCL(event)" rel="noopener" style="display:none">
           🚇 TCL
         </a>
-        <a id="vv-det-btn" class="vv-btn" href="https://velov.grandlyon.com" target="_blank" rel="noopener" style="display:none">
+        <a id="vv-det-btn" class="vv-btn" href="https://velov.grandlyon.com" target="_blank" rel="noopener" style="display:none;padding:12px 13px;font-size:11px">
           🚲 Vélo'v
         </a>
-        <button id="map-det-btn" class="map-det-btn" onclick="showOnMap()">🗺</button>
       </div>
-      <button id="copy-btn" class="copy-btn" onclick="copyAddress()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Copier l'adresse
-      </button>
 
-      <div class="det-footer">
+      <div class="det-footer" style="margin-top:10px">
         <div class="upd-time" id="det-upd">—</div>
         <button class="ref-btn" id="ref-btn" onclick="refreshDetail()">
           <svg id="ref-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
@@ -712,32 +721,16 @@ function updateDetail(p){
   const mapDetBtn=document.getElementById('map-det-btn');
   const tclDetBtn=document.getElementById('tcl-det-btn');
   const vvDetBtn=document.getElementById('vv-det-btn');
+  const vvNearBtn=document.getElementById('vv-near-btn');
   const isDepl=(type==='velov'||type==='citiz'||type==='leo');
-  // TCL : visible sur parking uniquement
-  tclDetBtn.style.display=isDepl?'none':'flex';
-  const vvDetBtn=document.getElementById('vv-det-btn');
-  // Vélo'v : visible sur parking (station proche) + fiche velov
-  if(type==='parking'||type==='velov'){
-    vvDetBtn.style.display='flex';
-    // Coordonnées : station elle-même si fiche velov, station proche si fiche parking
-    let vvLat, vvLng;
-    if(type==='velov'){
-      vvLat=p.lat; vvLng=p.lng;
-    } else if(p.lat&&p.lng&&data.velov?.length){
-      const nearest=(data.velov||[]).filter(v=>v.en_service&&v.nom&&v.nom.trim()!=='')
-        .map(v=>({...v,d:dist(p.lat,p.lng,v.lat,v.lng)})).sort((a,b)=>a.d-b.d)[0];
-      if(nearest){vvLat=nearest.lat;vvLng=nearest.lng;}
-    }
-    if(vvLat&&vvLng){
-      vvDetBtn.href=`https://velov.grandlyon.com/#/map?lat=${vvLat}&lng=${vvLng}&zoom=17`;
-    } else {
-      vvDetBtn.href='https://velov.grandlyon.com';
-    }
-  } else {
-    vvDetBtn.style.display='none';
+  // TCL : parking uniquement
+  tclDetBtn.style.display=(!isDepl)?'flex':'none';
+  // Vélo'v bouton bas : fiche velov uniquement
+  vvDetBtn.style.display=type==='velov'?'flex':'none';
+  if(type==='velov'&&p.lat&&p.lng){
+    vvDetBtn.href=`https://velov.grandlyon.com/#/map?lat=${p.lat}&lng=${p.lng}&zoom=17`;
   }
   if(p.lat&&p.lng){
-    // "S'y rendre" — destination universelle (geo: fonctionne sur iOS/Android/autres)
     navBtn.href=`geo:${p.lat},${p.lng}?q=${encodeURIComponent(p.nom)}`;
     navBtn.style.opacity='1'; navBtn.style.pointerEvents='auto';
     mapDetBtn.style.display='flex';
@@ -778,6 +771,8 @@ function updateDetail(p){
           (nearest.velos_meca?`<span class="badge bm">⚙ ${nearest.velos_meca}</span>`:'')+
           (nearest.velos_elec?`<span class="badge be">⚡ ${nearest.velos_elec}</span>`:'')+
           `<span class="badge" style="background:var(--surface);color:var(--muted)">${nearest.places_libres} places libres</span>`;
+        // Bouton Réserver : pointe vers la station la plus proche
+        if(vvNearBtn) vvNearBtn.href=`https://velov.grandlyon.com/#/map?lat=${nearest.lat}&lng=${nearest.lng}&zoom=17`;
       }else vvn.style.display='none';
     }else vvn.style.display='none';
   }
