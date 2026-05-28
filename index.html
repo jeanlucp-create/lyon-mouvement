@@ -871,20 +871,7 @@ function showOnMap(){
 // ── OUVRIR TCL ──
 function openTCL(e){
   if(e) e.preventDefault();
-  const isAndroid=/Android/i.test(navigator.userAgent);
-  const isIOS=/iPad|iPhone|iPod/i.test(navigator.userAgent);
-  if(isAndroid){
-    // Sur Android : tente d'ouvrir l'app via intent, sinon Play Store
-    window.location='intent://itineraires#Intent;package=com.micropole.android.tcl_mobile;scheme=tcl;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.micropole.android.tcl_mobile;end';
-  } else if(isIOS){
-    // Sur iOS : tente deep link, fallback App Store
-    const appStoreUrl='https://apps.apple.com/fr/app/tcl/id579379606';
-    window.location='tcl://itineraires';
-    setTimeout(()=>{ window.open(appStoreUrl,'_blank'); },1500);
-  } else {
-    // Desktop ou autre : ouvre le site
-    window.open('https://www.tcl.fr/itineraires','_blank');
-  }
+  window.open('https://www.tcl.fr/itineraires','_blank');
 }
 function copyAddress(){
   if(!selected) return;
