@@ -105,49 +105,52 @@
 
     /* ── DETAIL ── */
     .detail-view{position:absolute;inset:0;background:var(--cream);overflow-y:auto;display:none;z-index:100;padding:12px 16px 32px;-webkit-overflow-scrolling:touch}
-    .back-btn{display:inline-flex;align-items:center;gap:7px;background:var(--white);border:1.5px solid var(--orange-border);color:var(--orange-dark);font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;padding:7px 14px;border-radius:100px;cursor:pointer;margin-bottom:14px}
-    .det-card{background:var(--white);border-radius:18px;border:1.5px solid var(--border);padding:20px;margin-bottom:10px}
-    .det-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-    .det-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
-    .det-name{font-size:19px;font-weight:900;line-height:1.1;letter-spacing:-.3px;margin-bottom:3px}
-    .det-meta{font-size:9px;color:var(--muted);font-weight:600;line-height:1.4}
-    .det-num{font-size:60px;font-weight:900;line-height:1;letter-spacing:-2px;font-family:'Space Mono',monospace}
+    /* Barre fixe actions */
+    .det-action-bar{position:sticky;top:0;z-index:10;background:var(--white);border-bottom:1px solid var(--orange-border);padding:8px 12px;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-wrap:nowrap;overflow-x:auto}
+    .det-back-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:100px;border:1.5px solid var(--orange-border);background:var(--orange-light);color:var(--orange-dark);font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0}
+    .det-actions{display:flex;gap:5px;margin-left:auto;flex-shrink:0}
+    .det-act-btn{display:flex;align-items:center;gap:4px;padding:7px 11px;border-radius:100px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;text-decoration:none;border:1.5px solid transparent}
+    .det-act-map{background:var(--surface2);color:var(--muted);border-color:var(--border)}
+    .det-act-nav{background:var(--orange);color:white}
+    .det-act-copy{background:var(--orange-light);color:var(--orange-dark);border-color:var(--orange-border)}
+    .det-act-tcl{background:#E3F2FD;color:#1565C0;border-color:#B5D4F4}
+    .det-act-vv{background:var(--orange-light);color:var(--orange-dark);border-color:var(--orange-border)}
+    .det-act-btn.copied{background:var(--green);color:white;border-color:var(--green)}
+    .back-btn{display:none}
+    .det-card{background:var(--white);border-radius:18px;border:1.5px solid var(--border);padding:16px;margin-bottom:10px}
+    .det-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .det-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0}
+    .det-name{font-size:17px;font-weight:900;line-height:1.1;letter-spacing:-.2px;margin-bottom:1px}
+    .det-meta{font-size:9px;color:var(--muted);font-weight:600}
+    .det-horaires-inline{font-size:9px;color:var(--muted);font-weight:600;margin-top:2px;line-height:1.3}
+    .det-num{font-size:54px;font-weight:900;line-height:1;letter-spacing:-2px;font-family:'Space Mono',monospace}
     .det-label{color:var(--muted);font-size:11px;font-weight:700}
-    .prog-wrap{margin:14px 0}
+    .prog-wrap{margin:10px 0}
     .prog-meta{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
     .prog-track{height:4px;background:var(--border);border-radius:99px;overflow:hidden}
     .prog-fill{height:100%;border-radius:99px;transition:width .8s cubic-bezier(.16,1,.3,1)}
-    .status-pill{display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:100px;border:1.5px solid currentColor;margin-bottom:18px}
-    .tarifs-title{font-size:9px;color:var(--muted);font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
-    .tarifs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:14px}
-    .tarif-cell{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 5px;text-align:center}
+    .status-pill{display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:100px;border:1.5px solid currentColor;margin-bottom:14px}
+    .tarifs-title{font-size:9px;color:var(--muted);font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+    .tarifs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px}
+    .tarif-cell{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px 4px;text-align:center}
     .tarif-lbl{font-size:8px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:2px}
     .tarif-val{font-size:12px;font-weight:900;color:var(--text)}
-    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
-    .info-cell{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px}
-    .info-cell-full{grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px}
-    .info-lbl{font-size:8px;color:var(--muted);font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+    .info-cell{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px}
+    .info-lbl{font-size:8px;color:var(--muted);font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
     .info-val{font-size:13px;font-weight:800;color:var(--text)}
-    .info-text{font-size:10px;color:var(--muted);font-weight:600;line-height:1.6}
-    .vv-near{background:var(--orange-light);border:1px solid var(--orange-border);border-radius:11px;padding:12px;margin-bottom:14px}
-    .vv-near-title{font-size:8px;color:var(--muted);font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
-    .vv-near-row{display:flex;align-items:center;gap:10px}
-    .vv-near-ico{width:30px;height:30px;border-radius:8px;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    /* Vélo'v compact sans titre */
+    .vv-near{background:var(--orange-light);border:1px solid var(--orange-border);border-radius:9px;padding:9px 11px;margin-bottom:12px}
+    .vv-near-row{display:flex;align-items:center;gap:8px}
+    .vv-near-ico{width:26px;height:26px;border-radius:7px;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
     .vv-near-name{font-size:11px;font-weight:800;color:var(--text)}
     .vv-near-dist{font-size:11px;font-weight:900;color:var(--orange);font-family:'Space Mono',monospace;flex-shrink:0}
-    .nav-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;background:var(--orange);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;padding:13px;border-radius:12px;text-decoration:none;letter-spacing:.04em;margin-bottom:8px;border:none;cursor:pointer}
-    .nav-btn:active{opacity:.85}
-    .btn-row{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;margin-bottom:8px}
-    .vv-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:12px 14px;border-radius:12px;text-decoration:none;cursor:pointer}
-    .tcl-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:12px 14px;border-radius:12px;text-decoration:none;cursor:pointer}
-    .map-det-btn{display:flex;align-items:center;justify-content:center;gap:5px;background:var(--surface2);color:var(--muted);border:1.5px solid var(--border);padding:7px 10px;border-radius:10px;cursor:pointer;font-size:11px;font-weight:800;font-family:Nunito,sans-serif;white-space:nowrap;flex-shrink:0}
-    .copy-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:var(--surface);color:var(--muted);border:1.5px solid var(--border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:11px;border-radius:12px;cursor:pointer;margin-bottom:8px;transition:all .2s}
-    .copy-btn.copied{background:var(--green);color:white;border-color:var(--green)}
-    .det-footer{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+    .vv-near-reserve{display:flex;align-items:center;padding:5px 10px;border-radius:100px;background:var(--orange);color:white;font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;text-decoration:none;white-space:nowrap;flex-shrink:0;margin-left:6px}
+    .vv-det-badges{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+    .det-footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
     .upd-time{font-size:9px;color:var(--muted);font-weight:600}
-    .ref-btn{background:var(--orange-light);border:1.5px solid var(--orange-border);color:var(--orange-dark);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;padding:7px 13px;border-radius:100px;cursor:pointer;display:flex;align-items:center;gap:5px}
+    .ref-btn{background:var(--orange-light);border:1.5px solid var(--orange-border);color:var(--orange-dark);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;padding:6px 12px;border-radius:100px;cursor:pointer;display:flex;align-items:center;gap:4px}
     .ref-btn.spinning svg{animation:spin 1s linear infinite}
-    .vv-det-badges{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap}
 
     /* TCL lien dans déplacements */
     .tcl-link-item{background:var(--white);border-radius:13px;border:1.5px solid var(--orange-border);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;text-decoration:none;margin-bottom:6px}
@@ -257,22 +260,44 @@
   </div>
 
   <div class="detail-view" id="detail-view">
-    <button class="back-btn" onclick="closeDetail()">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-      Retour
-    </button>
+
+    <!-- BARRE FIXE : Retour + toutes les actions -->
+    <div class="det-action-bar">
+      <button class="det-back-btn" onclick="closeDetail()">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Retour
+      </button>
+      <div class="det-actions">
+        <button id="map-det-btn" class="det-act-btn det-act-map" onclick="showOnMap()" style="display:none">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Carte
+        </button>
+        <a id="nav-btn" class="det-act-btn det-act-nav" href="#" target="_blank" rel="noopener">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          S'y rendre
+        </a>
+        <button id="copy-btn" class="det-act-btn det-act-copy" onclick="copyAddress()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copier
+        </button>
+        <a id="tcl-det-btn" class="det-act-btn det-act-tcl" href="#" onclick="openTCL(event)" rel="noopener" style="display:none">
+          🚇 TCL
+        </a>
+        <a id="vv-det-btn" class="det-act-btn det-act-vv" href="https://velov.grandlyon.com" target="_blank" rel="noopener" style="display:none">
+          🚲 Vélo'v
+        </a>
+      </div>
+    </div>
+
     <div class="det-card">
-      <!-- EN-TÊTE : icône + nom + bouton Voir la carte -->
+      <!-- EN-TÊTE : icône + nom + horaires inline -->
       <div class="det-header">
         <div class="det-icon" id="det-icon"></div>
         <div style="flex:1;min-width:0">
           <div class="det-name" id="det-name"></div>
           <div class="det-meta" id="det-meta"></div>
+          <div class="det-horaires-inline" id="det-horaires-inline" style="display:none"></div>
         </div>
-        <button id="map-det-btn" class="map-det-btn" onclick="showOnMap()" style="display:none">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-          Voir la carte
-        </button>
       </div>
       <div id="det-err"></div>
 
@@ -299,23 +324,18 @@
         <div class="info-grid">
           <div class="info-cell"><div class="info-lbl">Capacité</div><div class="info-val" id="det-cap">—</div></div>
           <div class="info-cell"><div class="info-lbl">PMR</div><div class="info-val" id="det-pmr">—</div></div>
-          <div class="info-cell-full" id="sec-horaires" style="display:none">
-            <div class="info-lbl">Horaires</div>
-            <div class="info-text" id="det-horaires"></div>
-          </div>
         </div>
-        <!-- Bloc Vélo'v avec bouton Réserver intégré -->
+        <!-- Bloc Vélo'v compact -->
         <div class="vv-near" id="sec-vv-near" style="display:none">
-          <div class="vv-near-title">🚲 Station Vélo'v la plus proche</div>
           <div class="vv-near-row">
             <div class="vv-near-ico">🚲</div>
             <div style="flex:1;min-width:0">
               <div class="vv-near-name" id="vn-name">—</div>
-              <div class="vv-badges" id="vn-badges" style="margin-top:3px"></div>
+              <div class="vv-badges" id="vn-badges" style="margin-top:2px"></div>
             </div>
             <div class="vv-near-dist" id="vn-dist">—</div>
-            <a id="vv-near-btn" class="vv-btn" href="https://velov.grandlyon.com" target="_blank" rel="noopener" style="margin-left:8px;padding:6px 10px;font-size:11px">
-              🚲 Réserver
+            <a id="vv-near-btn" class="vv-near-reserve" href="https://velov.grandlyon.com" target="_blank" rel="noopener">
+              Réserver
             </a>
           </div>
         </div>
@@ -342,25 +362,7 @@
         </div>
       </div>
 
-      <!-- BOUTONS : S'y rendre | Copier | TCL ou Réserver Vélo'v -->
-      <div class="btn-row">
-        <a id="nav-btn" class="nav-btn" href="#" target="_blank" rel="noopener" style="margin-bottom:0">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          S'y rendre
-        </a>
-        <button id="copy-btn" class="copy-btn" onclick="copyAddress()" style="margin-bottom:0;padding:12px 13px;width:auto">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Copier
-        </button>
-        <a id="tcl-det-btn" class="tcl-btn" href="#" onclick="openTCL(event)" rel="noopener" style="display:none">
-          🚇 TCL
-        </a>
-        <a id="vv-det-btn" class="vv-btn" href="https://velov.grandlyon.com" target="_blank" rel="noopener" style="display:none;padding:12px 13px;font-size:11px">
-          🚲 Vélo'v
-        </a>
-      </div>
-
-      <div class="det-footer" style="margin-top:10px">
+      <div class="det-footer">
         <div class="upd-time" id="det-upd">—</div>
         <button class="ref-btn" id="ref-btn" onclick="refreshDetail()">
           <svg id="ref-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
@@ -717,25 +719,25 @@ function updateDetail(p){
   if(p.adresse) meta+=' · '+p.adresse;
   const metaEl=document.getElementById('det-meta');
   metaEl.textContent=meta; metaEl.style.color=old?'var(--red)':'var(--muted)';
-  const navBtn=document.getElementById('nav-btn');
   const mapDetBtn=document.getElementById('map-det-btn');
   const tclDetBtn=document.getElementById('tcl-det-btn');
   const vvDetBtn=document.getElementById('vv-det-btn');
   const vvNearBtn=document.getElementById('vv-near-btn');
   const isDepl=(type==='velov'||type==='citiz'||type==='leo');
-  // TCL : parking uniquement
   tclDetBtn.style.display=(!isDepl)?'flex':'none';
-  // Vélo'v bouton bas : fiche velov uniquement
   vvDetBtn.style.display=type==='velov'?'flex':'none';
   if(type==='velov'&&p.lat&&p.lng){
     vvDetBtn.href=`https://velov.grandlyon.com/#/map?lat=${p.lat}&lng=${p.lng}&zoom=17`;
   }
   if(p.lat&&p.lng){
-    navBtn.href=`geo:${p.lat},${p.lng}?q=${encodeURIComponent(p.nom)}`;
-    navBtn.style.opacity='1'; navBtn.style.pointerEvents='auto';
+    document.getElementById('nav-btn').href=`geo:${p.lat},${p.lng}?q=${encodeURIComponent(p.nom)}`;
+    document.getElementById('nav-btn').style.opacity='1';
+    document.getElementById('nav-btn').style.pointerEvents='auto';
     mapDetBtn.style.display='flex';
   }else{
-    navBtn.href='#'; navBtn.style.opacity='.4'; navBtn.style.pointerEvents='none';
+    document.getElementById('nav-btn').href='#';
+    document.getElementById('nav-btn').style.opacity='.4';
+    document.getElementById('nav-btn').style.pointerEvents='none';
     mapDetBtn.style.display='none';
   }
   if(type==='parking'){
@@ -756,9 +758,12 @@ function updateDetail(p){
       document.getElementById('t4h').textContent=p.tarif_4h?p.tarif_4h+' €':'—';
       document.getElementById('t24h').textContent=p.tarif_24h?p.tarif_24h+' €':'—';
     }
-    const hc=document.getElementById('sec-horaires');
-    if(p.horaires){hc.style.display='block';document.getElementById('det-horaires').textContent=p.horaires;}
-    else hc.style.display='none';
+    const hc=document.getElementById('det-horaires-inline');
+    if(p.horaires&&hc){
+      // Compacter les horaires en 1 ligne : supprimer les répétitions
+      const h=p.horaires.replace(/Ouvert de /gi,'🕐 ').replace(/ du /gi,' ').replace(/, et de /gi,' · ').replace(/ les /gi,' ');
+      hc.textContent=h; hc.style.display='block';
+    } else if(hc) hc.style.display='none';
     const vvn=document.getElementById('sec-vv-near');
     if(p.lat&&p.lng&&data.velov?.length){
       const nearest=(data.velov||[]).filter(v=>v.en_service&&v.nom&&v.nom.trim()!=='')
@@ -825,10 +830,9 @@ function addM(lat,lng,color,sz,lbl,name,sub,type){
   const navUrl=`geo:${lat},${lng}?q=${encodeURIComponent(name)}`;
   const tclBtn=type==='parking'?`<a href="#" onclick="openTCL(event)" class="lp-btn lp-btn-tcl">🚇 Itinéraire TCL</a>`:'';
   const vvBtn=type==='velov'?`<a href="https://velov.grandlyon.com/#/map?lat=${lat}&lng=${lng}&zoom=17" target="_blank" class="lp-btn lp-btn-tcl">🚲 Réserver sur Vélo'v</a>`:'';
-  const parkingVvBtn=type==='parking'?`<a href="https://velov.grandlyon.com/#/map?lat=${lat}&lng=${lng}&zoom=16" target="_blank" class="lp-btn lp-btn-tcl">🚲 Vélo'v à proximité</a>`:'';
   const popup=L.popup({maxWidth:200,minWidth:160}).setContent(
     `<div class="lp-popup"><div class="lp-name">${name}</div><div class="lp-num" style="color:${color}">${lbl}</div><div class="lp-sub">${sub}</div>
-    <div class="lp-btns"><a href="${navUrl}" target="_blank" class="lp-btn lp-btn-nav">📍 S'y rendre</a>${tclBtn}${parkingVvBtn}${vvBtn}</div></div>`);
+    <div class="lp-btns"><a href="${navUrl}" target="_blank" class="lp-btn lp-btn-nav">📍 S'y rendre</a>${tclBtn}${vvBtn}</div></div>`);
   const m=L.marker([lat,lng],{icon}).addTo(map).bindPopup(popup);
   m.on('click',()=>m.openPopup()); markers.push(m);
 }
@@ -876,30 +880,23 @@ function openTCL(e){
 function copyAddress(){
   if(!selected) return;
   const btn=document.getElementById('copy-btn');
-  // Construire le texte à copier : nom + adresse si disponible
   let txt=selected.nom;
   if(selected.adresse) txt+=', '+selected.adresse;
   else txt+=', Lyon';
-  navigator.clipboard.writeText(txt).then(()=>{
-    btn.textContent='✓ Adresse copiée !';
+  const doFeedback=()=>{
+    btn.textContent='✓ Copié !';
     btn.classList.add('copied');
     setTimeout(()=>{
-      btn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copier l'adresse`;
+      btn.innerHTML=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copier`;
       btn.classList.remove('copied');
     },5000);
-  }).catch(()=>{
-    // Fallback pour les navigateurs qui ne supportent pas clipboard API
+  };
+  navigator.clipboard.writeText(txt).then(doFeedback).catch(()=>{
     const el=document.createElement('textarea');
     el.value=txt; el.style.position='fixed'; el.style.opacity='0';
     document.body.appendChild(el); el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-    btn.textContent='✓ Adresse copiée !';
-    btn.classList.add('copied');
-    setTimeout(()=>{
-      btn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copier l'adresse`;
-      btn.classList.remove('copied');
-    },5000);
+    document.execCommand('copy'); document.body.removeChild(el);
+    doFeedback();
   });
 }
 switchMode('stat');
