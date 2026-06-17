@@ -36,15 +36,19 @@
     .header-sub{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;position:relative;z-index:1}
 
     /* Navigation 2 lignes */
-    .nav-lines{display:flex;flex-direction:column;gap:5px;margin-bottom:9px;position:relative;z-index:1}
-    .nav-line{display:flex;align-items:center;gap:6px}
+    .nav-lines{display:flex;flex-direction:column;gap:0;margin-bottom:9px;position:relative;z-index:1;border-radius:10px;overflow:hidden;border:1.5px solid var(--orange-border)}
+    .nav-line{display:flex;align-items:center;gap:6px;padding:6px 8px}
+    .nav-line-stat{background:#FFF5EE}
+    .nav-line-dep{background:#F0F7FF}
     .nav-lbl{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;min-width:68px;cursor:pointer}
     .nav-lbl.active{color:var(--orange-dark)}
+    .nav-line-dep .nav-lbl.active{color:#1565C0}
     .nav-tabs{display:flex;gap:4px;flex:1;flex-wrap:nowrap;overflow:hidden}
-    .nav-sep{height:0.5px;background:var(--border);margin:1px 0}
     .ntab{font-size:9px;font-weight:800;padding:4px 8px;border-radius:100px;border:1.5px solid var(--orange-border);background:var(--white);color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;font-family:'Nunito',sans-serif}
     .ntab.active{background:var(--orange);color:white;border-color:var(--orange)}
     .ntab.line-on{background:var(--orange-light);color:var(--orange-dark);border-color:var(--orange-border)}
+    .nav-line-dep .ntab.active{background:#1565C0;border-color:#1565C0}
+    .nav-line-dep .ntab.line-on{background:#E3F2FD;color:#1565C0;border-color:#B5D4F4}
 
     /* Barre vue + recherche */
     .view-row{display:flex;gap:5px;margin-bottom:8px;position:relative;z-index:1}
@@ -287,7 +291,7 @@
 
   <!-- Navigation 2 lignes -->
   <div class="nav-lines">
-    <div class="nav-line">
+    <div class="nav-line nav-line-stat">
       <span class="nav-lbl active" id="lbl-stat" onclick="switchSub('pr')">Stationner</span>
       <div class="nav-tabs">
         <div class="ntab active" id="tab-pr" onclick="switchSub('pr')">🚇 Parc Relais</div>
@@ -295,8 +299,7 @@
         <div class="ntab line-on" id="tab-ve" onclick="switchSub('ve')">⚡ Recharge VE</div>
       </div>
     </div>
-    <div class="nav-sep"></div>
-    <div class="nav-line">
+    <div class="nav-line nav-line-dep">
       <span class="nav-lbl" id="lbl-dep" onclick="switchSub('vv')">Se déplacer</span>
       <div class="nav-tabs">
         <div class="ntab" id="tab-vv" onclick="switchSub('vv')">🚲 Vélo'v</div>
@@ -449,27 +452,27 @@
           <div class="fp-title" id="vv-title">—</div>
           <button class="fp-star" id="vv-star">☆</button>
         </div>
-        <!-- L2 : nb vélos + badge statut -->
+        <!-- L2 : nb vélos + badge statut + ↻ -->
         <div class="fp-statut-row" style="align-items:center;margin-bottom:5px">
           <span class="fp-num c-green" id="vv-dispo">—</span>
           <span class="fp-label">vélos disponibles</span>
-          <span class="fp-badge c-green" id="vv-badge">—</span>
-        </div>
-        <!-- L3 : méca · élec · places libres · ↻ -->
-        <div class="fp-meta" style="align-items:center;margin-bottom:4px">
-          <span id="vv-badge-meca" style="font-size:10px;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#E65C00;font-weight:800;margin-right:4px;display:none"></span>
-          <span id="vv-badge-elec" style="font-size:10px;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#1565C0;font-weight:800;margin-right:4px;display:none"></span>
-          <span class="fp-sep" id="vv-sep" style="display:none">·</span>
-          <span class="fp-meta-item">Places libres&nbsp;<span class="fp-meta-val" id="vv-docks">—</span></span>
-          <button class="ref-btn" id="ref-btn-vv" onclick="refreshDetail()" style="margin-left:auto;padding:4px 7px;border-radius:8px;flex-shrink:0;display:flex;align-items:center" title="Actualiser">
+          <span class="fp-badge c-green" id="vv-badge">En service</span>
+          <button class="ref-btn" id="ref-btn-vv" onclick="refreshDetail()" style="margin-left:6px;padding:4px 7px;border-radius:8px;flex-shrink:0;display:flex;align-items:center" title="Actualiser">
             <svg id="ref-icon-vv" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
           </button>
         </div>
-        <!-- L4 : capacité + màj -->
-        <div class="fp-meta" style="margin-bottom:6px">
+        <!-- L3 : méca · élec · places libres -->
+        <div class="fp-meta" style="align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:4px">
+          <span id="vv-badge-meca" style="font-size:10px;padding:2px 7px;border-radius:4px;background:#FFF3E0;color:#E65C00;font-weight:800;display:none">⚙ — méca</span>
+          <span id="vv-badge-elec" style="font-size:10px;padding:2px 7px;border-radius:4px;background:#E3F2FD;color:#1565C0;font-weight:800;display:none">⚡ — élec</span>
+          <span class="fp-sep" id="vv-sep" style="display:none">·</span>
+          <span class="fp-meta-item">Places libres&nbsp;<span class="fp-meta-val" id="vv-docks">—</span></span>
+        </div>
+        <!-- L4 : capacité · màj -->
+        <div class="fp-meta" style="margin-bottom:6px;align-items:center">
           <span class="fp-meta-item">Capacité&nbsp;<span class="fp-meta-val" id="vv-cap">—</span></span>
           <span class="fp-sep">·</span>
-          <span class="fp-meta-item" id="vv-upd">—</span>
+          <span class="fp-meta-item" id="vv-upd" style="color:var(--muted);font-size:10px">—</span>
         </div>
         <!-- Barre occupation -->
         <div class="fp-barre-bg"><div class="fp-barre-fill" id="vv-barre" style="width:0%"></div></div>
@@ -496,7 +499,8 @@
         </div>
       </div>
 
-      <div class="det-footer">
+      <!-- Footer uniquement pour autopartage -->
+      <div class="det-footer" id="det-footer-auto" style="display:none">
         <div class="upd-time" id="det-upd">—</div>
         <button class="ref-btn" id="ref-btn2" onclick="refreshDetail()">
           <svg id="ref-icon2" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
@@ -946,6 +950,8 @@ function updateDetail(p){
   document.getElementById('sec-parking').style.display=type==='parking'?'block':'none';
   document.getElementById('sec-velov').style.display=type==='velov'?'block':'none';
   document.getElementById('sec-auto').style.display=(type==='citiz'||type==='leo')?'block':'none';
+  const autoFooter=document.getElementById('det-footer-auto');
+  if(autoFooter) autoFooter.style.display=(type==='citiz'||type==='leo')?'flex':'none';
   let ic,cc;
   if(type==='parking'){const g=gIcon(p.gestionnaire);ic=g.l;cc=g.c;}
   else if(type==='velov'){ic='🚲';cc='g-vv';}
@@ -1044,9 +1050,10 @@ function updateDetail(p){
         .map(v=>({...v,d:dist(p.lat,p.lng,v.lat,v.lng)})).filter(v=>v.d<800).sort((a,b)=>a.d-b.d);
       const nearest=allNear.find(v=>v.velos_dispo>0)||allNear[0];
       if(nearest&&nearest.d<800){
-        const elec=nearest.velos_elec>0?`<span class="fp-elec">⚡${nearest.velos_elec}</span>`:'';
-        vvNumEl.innerHTML=nearest.velos_dispo+' vélos'+elec;
-        if(vvSubEl) vvSubEl.textContent=nearest.velos_meca?`dont ${nearest.velos_meca} méca`:'';
+        const mecaBadge=nearest.velos_meca>0?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#FFF3E0;color:#E65C00;font-weight:800;margin-left:3px">⚙ ${nearest.velos_meca}</span>`:'';
+        const elecBadge=nearest.velos_elec>0?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#E3F2FD;color:#1565C0;font-weight:800;margin-left:3px">⚡ ${nearest.velos_elec}</span>`:'';
+        vvNumEl.innerHTML=`${nearest.velos_dispo} vélos${mecaBadge}${elecBadge}`;
+        if(vvSubEl) vvSubEl.textContent='';
         if(vvDetEl) vvDetEl.textContent=(nearest.nom.length>22?nearest.nom.slice(0,20)+'…':nearest.nom)+' · '+fmtDist(nearest.d);
       } else {
         vvNumEl.textContent='—';
@@ -1126,9 +1133,14 @@ function updateDetail(p){
     else if(adrBl) adrBl.style.display='none';
     // Màj
     const updEl=document.getElementById('vv-upd');
-    if(updEl&&p.last_reported){
-      const d=new Date(p.last_reported*1000);
-      updEl.textContent='màj '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    if(updEl){
+      if(p.last_reported){
+        const d=new Date(p.last_reported*1000);
+        updEl.textContent='màj '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        updEl.style.color='var(--muted)';
+      } else {
+        updEl.textContent='màj inconnue';
+      }
     }
   }
   if(type==='citiz'||type==='leo'){
