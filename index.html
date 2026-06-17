@@ -290,7 +290,7 @@
   <!-- ONGLETS (selon le mode) -->
   <div class="tabs" id="tabs-stat">
     <div class="tab active" id="tab-pr" onclick="switchSub('pr')">🚇 P+R TCL</div>
-    <div class="tab" id="tab-pk" onclick="switchSub('pk')">🅿 LPA · Indigo · Q-Park</div>
+    <div class="tab" id="tab-pk" onclick="switchSub('pk')">🅿 Autres parkings</div>
     <div class="tab" id="tab-ve" onclick="switchSub('ve')">⚡ Recharge VE</div>
   </div>
   <div class="tabs" id="tabs-dep" style="display:none">
@@ -435,13 +435,48 @@
 
       <!-- VÉLO'V -->
       <div id="sec-velov" style="display:none">
-        <div class="vv-det-badges" id="vv-badges-det"></div>
-        <div class="info-grid">
-          <div class="info-cell"><div class="info-lbl">Vélos dispos</div><div class="info-val c-green" id="vv-dispo">—</div></div>
-          <div class="info-cell"><div class="info-lbl">Places libres</div><div class="info-val" id="vv-docks">—</div></div>
-          <div class="info-cell"><div class="info-lbl">Capacité</div><div class="info-val" id="vv-cap">—</div></div>
-          <div class="info-cell"><div class="info-lbl">Statut</div><div class="info-val" id="vv-stat">—</div></div>
+        <!-- Header identique parking -->
+        <div class="fp-header">
+          <button class="fp-back" onclick="closeDetail()">&#8592;</button>
+          <div class="fp-logo" style="background:#e8501a;font-size:11px;font-weight:900">V'</div>
+          <div class="fp-title" id="vv-title">—</div>
+          <button class="ref-btn" id="ref-btn-vv" onclick="refreshDetail()" style="padding:4px 7px;border-radius:8px;flex-shrink:0;display:flex;align-items:center" title="Actualiser">
+            <svg id="ref-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+          </button>
         </div>
+        <!-- Badges méca / élec -->
+        <div class="vv-det-badges" id="vv-badges-det"></div>
+        <!-- Grille infos -->
+        <div class="fp-grid" style="margin-bottom:8px">
+          <div class="fp-svc">
+            <div class="fp-svc-lbl">🚲 Vélos dispos</div>
+            <div class="fp-svc-num c-green" id="vv-dispo">—</div>
+          </div>
+          <div class="fp-svc">
+            <div class="fp-svc-lbl">🅿 Places libres</div>
+            <div class="fp-svc-num" id="vv-docks">—</div>
+          </div>
+          <div class="fp-svc">
+            <div class="fp-svc-lbl">📊 Capacité</div>
+            <div class="fp-svc-num" id="vv-cap">—</div>
+          </div>
+          <div class="fp-svc">
+            <div class="fp-svc-lbl">✅ Statut</div>
+            <div class="fp-svc-num" id="vv-stat">—</div>
+          </div>
+        </div>
+        <!-- Bouton Réserver -->
+        <a id="vv-reserve-btn" href="https://velov.grandlyon.com" target="_blank" rel="noopener"
+           style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:12px;background:var(--orange);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;text-decoration:none;margin-bottom:8px">
+          🚲 Réserver sur Vélo'v
+        </a>
+        <!-- Adresse -->
+        <div class="fp-horaires" id="vv-adresse-bloc" style="display:none">
+          <div class="fp-horaires-lbl">📍 Adresse</div>
+          <div class="fp-horaires-txt" id="vv-adresse">—</div>
+        </div>
+        <!-- Màj -->
+        <div style="text-align:right;font-size:10px;color:var(--muted);margin-top:4px" id="vv-upd">—</div>
       </div>
 
       <!-- AUTOPARTAGE -->
@@ -527,7 +562,12 @@ function colHex(c){return {green:'#2ECC71',amber:'#FF9500',red:'#FF3B30',gray:'#
 async function loadData(){
   document.getElementById('err-zone').innerHTML='';
   try{
-    const r=await fetch(WORKER); if(!r.ok) throw new Error('Erreur HTTP '+r.status);
+    let r, lastErr;
+    for(let attempt=0;attempt<3;attempt++){
+      try{ r=await fetch(WORKER); if(r.ok) break; lastErr=new Error('Erreur HTTP '+r.status); }
+      catch(e){ lastErr=e; if(attempt<2) await new Promise(res=>setTimeout(res,1200*(attempt+1))); }
+    }
+    if(!r||!r.ok) throw lastErr||new Error('Impossible de joindre le serveur');
     data=await r.json(); renderList(); if(map) renderMap();
   }catch(e){
     document.getElementById('err-zone').innerHTML=`<div class="error-msg">⚠️ ${e.message}</div>`;
@@ -639,7 +679,7 @@ function renderList(){
       html+=`<div class="sec-lbl">★ Favoris</div><div class="parking-list">`;
       favs.forEach(p=>html+=pHTML(p)); html+=`</div>`;
     }
-    const lbl=sub==='pr'?'🚇 P+R TCL':'🅿 LPA · Indigo · Q-Park';
+    const lbl=sub==='pr'?'🚇 P+R TCL':'🅿 Autres parkings';
     const open=list.filter(p=>p.places_disponibles>0).length;
     if(rest.length){
       html+=`<div class="sec-lbl${favs.length?' sec-lbl-gray':''}">${lbl} · ${open} ouverts</div><div class="parking-list">`;
@@ -850,12 +890,16 @@ function returnToDetail(){
 }
 
 async function refreshDetail(){
-  const btn=document.getElementById('ref-btn')||document.getElementById('ref-btn2');
-  if(btn){btn.disabled=true; btn.classList.add('spinning');}
-  const btn2=document.getElementById('ref-btn2');
+  const allRefBtns=['ref-btn','ref-btn-vv','ref-btn2'].map(id=>document.getElementById(id)).filter(Boolean);
+  allRefBtns.forEach(b=>{b.disabled=true;b.classList.add('spinning');});
   if(btn2){btn2.disabled=true; btn2.classList.add('spinning');}
   try{
-    const r=await fetch(WORKER); if(!r.ok) throw new Error('Erreur '+r.status);
+    let r, lastErr;
+    for(let attempt=0;attempt<3;attempt++){
+      try{ r=await fetch(WORKER); if(r.ok) break; lastErr=new Error('Erreur '+r.status); }
+      catch(e){ lastErr=e; if(attempt<2) await new Promise(res=>setTimeout(res,1200*(attempt+1))); }
+    }
+    if(!r||!r.ok) throw lastErr||new Error('Impossible de joindre le serveur');
     data=await r.json();
     const type=selected.type,id=String(selected.id);
     let fresh;
@@ -867,10 +911,8 @@ async function refreshDetail(){
     renderList();
   }catch(e){document.getElementById('det-err').innerHTML=`<div class="error-msg">⚠️ ${e.message}</div>`;}
   finally{
-    const b1=document.getElementById('ref-btn');
-    const b2=document.getElementById('ref-btn2');
-    if(b1){b1.disabled=false;b1.classList.remove('spinning');}
-    if(b2){b2.disabled=false;b2.classList.remove('spinning');}
+    const allRefBtns=['ref-btn','ref-btn-vv','ref-btn2'].map(id=>document.getElementById(id)).filter(Boolean);
+    allRefBtns.forEach(b=>{b.disabled=false;b.classList.remove('spinning');});
   }
 }
 
@@ -1033,13 +1075,32 @@ function updateDetail(p){
     document.getElementById('det-upd').textContent=ts?'Données : '+(new Date(ts)).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'—';
   }
   if(type==='velov'){
+    // Header
+    const titleEl=document.getElementById('vv-title');
+    if(titleEl) titleEl.textContent=p.nom||'Station Vélo\'v';
+    // Infos
     document.getElementById('vv-dispo').textContent=p.velos_dispo||0;
     document.getElementById('vv-docks').textContent=p.places_libres||0;
     document.getElementById('vv-cap').textContent=p.capacite||'—';
     document.getElementById('vv-stat').textContent=p.en_service?'En service':'Hors service';
+    document.getElementById('vv-stat').style.color=p.en_service?'var(--green)':'var(--red)';
     document.getElementById('vv-badges-det').innerHTML=
       (p.velos_meca?`<span class="badge bm">⚙ ${p.velos_meca} mécanique${p.velos_meca>1?'s':''}</span>`:'')+
       (p.velos_elec?`<span class="badge be">⚡ ${p.velos_elec} électrique${p.velos_elec>1?'s':''}</span>`:'');
+    // Bouton Réserver avec position
+    const reserveBtn=document.getElementById('vv-reserve-btn');
+    if(reserveBtn&&p.lat&&p.lng) reserveBtn.href=`https://velov.grandlyon.com/#/map?lat=${p.lat}&lng=${p.lng}&zoom=17`;
+    // Adresse
+    const adrBl=document.getElementById('vv-adresse-bloc');
+    const adrTxt=document.getElementById('vv-adresse');
+    if(p.adresse&&adrBl&&adrTxt){adrBl.style.display='block';adrTxt.textContent=p.adresse;}
+    else if(adrBl) adrBl.style.display='none';
+    // Màj
+    const updEl=document.getElementById('vv-upd');
+    if(updEl&&p.last_reported){
+      const d=new Date(p.last_reported*1000);
+      updEl.textContent='màj '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    }
   }
   if(type==='citiz'||type==='leo'){
     document.getElementById('ap-nom').textContent=p.nom||'—';
