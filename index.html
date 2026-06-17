@@ -110,6 +110,7 @@
     .detail-view{position:absolute;inset:0;background:var(--cream);overflow-y:auto;display:none;z-index:100;padding:12px 16px 32px;-webkit-overflow-scrolling:touch}
     /* Barre fixe actions */
     .det-action-bar{position:sticky;top:0;z-index:10;background:var(--white);border-bottom:1px solid var(--orange-border);padding:8px 12px;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .det-action-bar.hidden-for-parking{display:none}
     .det-back-btn{display:none}
     .det-actions{display:flex;gap:5px;width:100%;justify-content:center}
     .det-act-btn{display:flex;align-items:center;gap:4px;padding:7px 11px;border-radius:100px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;text-decoration:none;border:1.5px solid transparent}
@@ -202,6 +203,52 @@
     .parking-citiz{background:#EAF8ED;border:1px solid #A8DFB2;border-radius:9px;padding:9px 11px;margin-bottom:12px}
     .parking-citiz-title{font-size:8px;color:var(--muted);font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
     .parking-citiz-row{display:flex;align-items:center;gap:8px}
+    /* Nouvelle fiche parking v10 */
+    .fp-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .fp-back{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;border:1.5px solid var(--orange-border);background:var(--orange-light);color:var(--orange-dark);cursor:pointer;flex-shrink:0;font-size:14px}
+    .fp-logo{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;flex-shrink:0}
+    .fp-title{flex:1;font-size:16px;font-weight:900;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}
+    .fp-star{font-size:22px;cursor:pointer;flex-shrink:0;background:none;border:none;color:#DDD;transition:color .15s}
+    .fp-star.on{color:var(--amber)}
+    .fp-statut-row{display:flex;align-items:baseline;gap:6px;margin-bottom:4px;flex-wrap:nowrap}
+    .fp-num{font-size:34px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;flex-shrink:0}
+    .fp-label{font-size:13px;color:var(--muted);font-weight:700;flex-shrink:0}
+    .fp-alerte{font-size:11px;font-weight:800;flex-shrink:0}
+    .fp-badge{font-size:10px;font-weight:800;padding:3px 10px;border-radius:100px;margin-left:auto;flex-shrink:0;border:1.5px solid currentColor}
+    .fp-meta{display:flex;align-items:center;font-size:11px;margin-bottom:7px;gap:0;flex-wrap:wrap}
+    .fp-meta-item{color:var(--muted);font-weight:600}
+    .fp-meta-val{font-weight:800;color:var(--text)}
+    .fp-sep{color:var(--border);padding:0 6px}
+    .fp-barre-bg{height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-bottom:3px}
+    .fp-barre-fill{height:100%;border-radius:3px;transition:width .6s}
+    .fp-barre-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-weight:600;margin-bottom:10px}
+    .fp-tarifs{display:flex;gap:5px;margin-bottom:10px}
+    .fp-tarif{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 4px;text-align:center}
+    .fp-tarif-lbl{font-size:8px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:2px}
+    .fp-tarif-val{font-size:12px;font-weight:900;color:var(--text)}
+    .fp-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+    .fp-svc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 10px}
+    .fp-svc-lbl{font-size:8px;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:3px}
+    .fp-svc-num{font-size:18px;font-weight:900;color:var(--text);line-height:1.1}
+    .fp-svc-sub{font-size:10px;color:var(--muted);font-weight:600;margin-top:1px}
+    .fp-svc-detail{font-size:10px;color:var(--muted);font-weight:600;margin-top:1px}
+    .fp-elec{font-size:9px;padding:1px 5px;border-radius:3px;background:#E3F2FD;color:#1565C0;font-weight:800;margin-left:2px}
+    .fp-bornes{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 10px;margin-bottom:8px}
+    .fp-bornes-lbl{font-size:8px;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:3px}
+    .fp-borne-row{display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap}
+    .fp-borne-op{font-size:11px;font-weight:800;color:var(--text);min-width:52px}
+    .fp-borne-tag{font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-right:2px}
+    .fp-tag-r{background:#E8F5E9;color:#2E7D32}
+    .fp-tag-a{background:#E3F2FD;color:#1565C0}
+    .fp-tag-n{background:#FFF3E0;color:#E65C00}
+    .fp-horaires{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 10px;margin-bottom:8px}
+    .fp-horaires-lbl{font-size:8px;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:3px}
+    .fp-horaires-txt{font-size:11px;color:var(--muted);font-weight:600;line-height:1.6}
+    .fp-actions{display:flex;gap:5px;margin-bottom:10px}
+    .fp-act{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:9px 6px;border-radius:10px;font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;cursor:pointer;text-decoration:none;border:1.5px solid transparent;white-space:nowrap}
+    .fp-act-nav{background:var(--orange);color:white}
+    .fp-act-tcl{background:#E3F2FD;color:#1565C0;border-color:#B5D4F4}
+    .fp-act-map{background:var(--orange-light);color:var(--orange-dark);border-color:var(--orange-border)}
     @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes lpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
   </style>
@@ -312,73 +359,79 @@
     </div>
 
     <div class="det-card">
-      <!-- EN-TÊTE : bouton Retour + icône + nom -->
-      <div class="det-header">
-        <button class="det-back-inline" onclick="closeDetail()">
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-          Retour
-        </button>
-        <div class="det-icon" id="det-icon"></div>
-        <div style="flex:1;min-width:0">
-          <div class="det-name" id="det-name"></div>
-          <div class="det-meta" id="det-meta"></div>
-          <div class="det-horaires-inline" id="det-horaires-inline" style="display:none"></div>
-        </div>
-      </div>
+      <!-- FICHE PARKING v10 -->
       <div id="det-err"></div>
-
-      <!-- PARKING -->
       <div id="sec-parking">
-        <!-- Nombre + statut sur même ligne -->
-        <div style="display:flex;align-items:center;gap:0;margin-bottom:8px;flex-wrap:wrap">
-          <div style="display:flex;align-items:baseline;gap:8px">
-            <div class="det-num c-green" id="det-num">—</div>
-            <div class="det-label">places libres</div>
+        <!-- Header : retour + logo + nom + étoile -->
+        <div class="fp-header">
+          <button class="fp-back" onclick="closeDetail()">&#8592;</button>
+          <div class="fp-logo" id="fp-logo"></div>
+          <div class="fp-title" id="fp-title">—</div>
+          <button class="fp-star" id="fp-star" onclick="toggleFavDetail()">☆</button>
+        </div>
+        <!-- Statut places : nb · alerte · badge -->
+        <div class="fp-statut-row" style="align-items:center">
+          <span class="fp-num c-green" id="fp-num">—</span>
+          <span class="fp-label">places libres</span>
+          <span class="fp-alerte" id="fp-alerte" style="display:none"></span>
+          <span class="fp-badge c-green" id="fp-badge">—</span>
+        </div>
+        <!-- Capacité · PMR · màj · ↻ -->
+        <div class="fp-meta" style="align-items:center">
+          <span class="fp-meta-item">Capacité&nbsp;<span class="fp-meta-val" id="fp-cap">—</span></span>
+          <span class="fp-sep">·</span>
+          <span class="fp-meta-item">PMR&nbsp;<span class="fp-meta-val" id="fp-pmr">—</span></span>
+          <span class="fp-meta-item" id="fp-upd-wrap"><span class="fp-sep">·</span><span id="fp-upd" style="font-size:10px;color:var(--muted)">—</span></span>
+          <button class="ref-btn" id="ref-btn" onclick="refreshDetail()" style="margin-left:auto;padding:4px 7px;border-radius:8px;flex-shrink:0;display:flex;align-items:center" title="Actualiser">
+            <svg id="ref-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+          </button>
+        </div>
+        <!-- Barre occupation -->
+        <div class="fp-barre-bg"><div class="fp-barre-fill" id="fp-barre" style="width:0%"></div></div>
+        <div class="fp-barre-labels"><span>0</span><span id="fp-barre-max">—</span></div>
+        <!-- Tarifs LPA (masqués pour TCL) -->
+        <div class="fp-tarifs" id="fp-tarifs" style="display:none">
+          <div class="fp-tarif"><div class="fp-tarif-lbl">1h</div><div class="fp-tarif-val" id="fp-t1">—</div></div>
+          <div class="fp-tarif"><div class="fp-tarif-lbl">2h</div><div class="fp-tarif-val" id="fp-t2">—</div></div>
+          <div class="fp-tarif"><div class="fp-tarif-lbl">4h</div><div class="fp-tarif-val" id="fp-t4">—</div></div>
+          <div class="fp-tarif"><div class="fp-tarif-lbl">24h</div><div class="fp-tarif-val" id="fp-t24">—</div></div>
+        </div>
+        <!-- Grille Vélo'v + Citiz -->
+        <div class="fp-grid">
+          <div class="fp-svc" id="fp-vv-bloc">
+            <div class="fp-svc-lbl">🚲 Vélo'v proche</div>
+            <div class="fp-svc-num" id="fp-vv-num">—</div>
+            <div class="fp-svc-sub" id="fp-vv-sub">—</div>
+            <div class="fp-svc-detail" id="fp-vv-detail">—</div>
           </div>
-          <div class="status-pill c-green" id="det-status">—</div>
-        </div>
-        <div class="prog-wrap">
-          <div class="prog-meta"><span>OCCUPATION</span><span id="det-pct">—</span></div>
-          <div class="prog-track"><div class="prog-fill bg-green" id="det-prog" style="width:0%"></div></div>
-        </div>
-        <div id="sec-tarifs">
-          <div class="tarifs-title">Tarifs</div>
-          <div class="tarifs-grid">
-            <div class="tarif-cell"><div class="tarif-lbl">1h</div><div class="tarif-val" id="t1h">—</div></div>
-            <div class="tarif-cell"><div class="tarif-lbl">2h</div><div class="tarif-val" id="t2h">—</div></div>
-            <div class="tarif-cell"><div class="tarif-lbl">4h</div><div class="tarif-val" id="t4h">—</div></div>
-            <div class="tarif-cell"><div class="tarif-lbl">24h</div><div class="tarif-val" id="t24h">—</div></div>
+          <div class="fp-svc" id="fp-citiz-bloc">
+            <div class="fp-svc-lbl">🚗 Citiz</div>
+            <div class="fp-svc-num" id="fp-citiz-num">—</div>
+            <div class="fp-svc-sub" id="fp-citiz-sub"></div>
+            <div class="fp-svc-detail" id="fp-citiz-detail"></div>
           </div>
         </div>
-        <div class="info-grid">
-          <div class="info-cell"><div class="info-lbl">Capacité</div><div class="info-val" id="det-cap">—</div></div>
-          <div class="info-cell"><div class="info-lbl">PMR</div><div class="info-val" id="det-pmr">—</div></div>
+        <!-- Bornes IRVE regroupées par opérateur -->
+        <div class="fp-bornes" id="fp-bornes-bloc" style="display:none">
+          <div class="fp-bornes-lbl">⚡ Bornes de recharge</div>
+          <div id="fp-bornes-content"></div>
         </div>
-        <!-- Bloc Vélo'v compact -->
-        <div class="vv-near" id="sec-vv-near" style="display:none">
-          <div class="vv-near-row">
-            <div class="vv-near-ico">🚲</div>
-            <div style="flex:1;min-width:0">
-              <div class="vv-near-name" id="vn-name">—</div>
-              <div class="vv-badges" id="vn-badges" style="margin-top:2px"></div>
-            </div>
-            <div class="vv-near-dist" id="vn-dist">—</div>
-            <a id="vv-near-btn" class="vv-near-reserve" href="https://velov.grandlyon.com" target="_blank" rel="noopener">
-              Réserver
-            </a>
-          </div>
+        <!-- Horaires -->
+        <div class="fp-horaires" id="fp-horaires-bloc" style="display:none">
+          <div class="fp-horaires-lbl">🕐 Horaires</div>
+          <div class="fp-horaires-txt" id="fp-horaires-txt">—</div>
         </div>
-        <!-- Bloc Bornes dans fiche parking -->
-        <div class="parking-bornes" id="sec-parking-bornes" style="display:none">
-          <div class="parking-bornes-title">⚡ Bornes de recharge électrique</div>
-          <div id="parking-bornes-content"></div>
-        </div>
-        <!-- Bloc Citiz dans fiche parking -->
-        <div class="parking-citiz" id="sec-parking-citiz" style="display:none">
-          <div class="parking-citiz-title">🚗 Autopartage Citiz disponible</div>
-          <div id="parking-citiz-content"></div>
+        <!-- Adresse (LPA) -->
+        <div class="fp-horaires" id="fp-adresse-bloc" style="display:none">
+          <div class="fp-horaires-lbl">📍 Adresse</div>
+          <div class="fp-horaires-txt" id="fp-adresse-txt">—</div>
         </div>
       </div>
+      <!-- Garder les anciens IDs pour Vélo'v et Autopartage -->
+      <div id="det-name" style="display:none"></div>
+      <div id="det-meta" style="display:none"></div>
+      <div id="det-horaires-inline" style="display:none"></div>
+      <div id="det-icon" style="display:none"></div>
 
       <!-- VÉLO'V -->
       <div id="sec-velov" style="display:none">
@@ -403,8 +456,8 @@
 
       <div class="det-footer">
         <div class="upd-time" id="det-upd">—</div>
-        <button class="ref-btn" id="ref-btn" onclick="refreshDetail()">
-          <svg id="ref-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+        <button class="ref-btn" id="ref-btn2" onclick="refreshDetail()">
+          <svg id="ref-icon2" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
           Actualiser
         </button>
       </div>
@@ -457,13 +510,13 @@ function fmtDate(s){
   return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'});
 }
 function getStatus(nb,cap){
-  if(nb===null||nb===undefined||nb<0) return {lbl:'Données indisponibles',c:'gray',pct:0};
-  if(nb===0) return {lbl:'Complet',c:'red',pct:0};
-  // Seuils absolus : 0-15 rouge, 16-30 orange, >30 vert
+  if(nb===null||nb===undefined||nb<0) return {lbl:'Données indisponibles',c:'gray',pct:0,alerte:null};
+  if(nb===0) return {lbl:'Complet',c:'red',pct:100,alerte:'Complet'};
   const pct=cap?Math.round(nb/cap*100):80;
-  if(nb<=15) return {lbl:'Presque plein',c:'red',pct};
-  if(nb<=30) return {lbl:'Limité',c:'amber',pct};
-  return {lbl:'Disponible',c:'green',pct};
+  const occ=cap?Math.round((1-nb/cap)*100):20;
+  if(nb<=15) return {lbl:'Ouvert',c:'red',pct:occ,alerte:'Presque plein'};
+  if(nb<=30) return {lbl:'Ouvert',c:'amber',pct:occ,alerte:'Limité'};
+  return {lbl:'Ouvert',c:'green',pct:occ,alerte:null};
 }
 function gIcon(g){
   return g==='TCL'?{l:'TCL',c:'g-tcl'}:g==='LPA'?{l:'LPA',c:'g-lpa'}:g==='INDIGO'?{l:'IND',c:'g-ind'}:{l:'Q',c:'g-qpk'};
@@ -728,6 +781,8 @@ function showDetail(id,type){
   selected={...item,type};
   fromDetail=false; fromMap=false;
   document.getElementById('detail-view').style.display='block';
+  const actBar=document.getElementById('det-action-bar');
+  if(actBar) actBar.style.display='flex';
   document.getElementById('list-view').style.display='none';
   document.getElementById('map-view').style.display='none';
   if(mapVisible){mapVisible=false;document.getElementById('map-btn').textContent='🗺 Carte';}
@@ -746,6 +801,8 @@ function showDetailFromMap(id,type){
   selected={...item,type};
   fromMap=true;
   document.getElementById('detail-view').style.display='block';
+  const actBar=document.getElementById('det-action-bar');
+  if(actBar) actBar.style.display='flex';
   document.getElementById('map-view').style.display='none';
   document.getElementById('list-view').style.display='none';
   // Changer le label du bouton Retour
@@ -786,13 +843,17 @@ function returnToDetail(){
   document.getElementById('map-view').style.display='none';
   document.getElementById('map-back-btn').style.display='none';
   document.getElementById('detail-view').style.display='block';
+  const actBar=document.getElementById('det-action-bar');
+  if(actBar) actBar.style.display='flex';
   mapVisible=false;
   document.getElementById('map-btn').textContent='🗺 Carte';
 }
 
 async function refreshDetail(){
-  const btn=document.getElementById('ref-btn');
-  btn.disabled=true; btn.classList.add('spinning');
+  const btn=document.getElementById('ref-btn')||document.getElementById('ref-btn2');
+  if(btn){btn.disabled=true; btn.classList.add('spinning');}
+  const btn2=document.getElementById('ref-btn2');
+  if(btn2){btn2.disabled=true; btn2.classList.add('spinning');}
   try{
     const r=await fetch(WORKER); if(!r.ok) throw new Error('Erreur '+r.status);
     data=await r.json();
@@ -805,7 +866,12 @@ async function refreshDetail(){
     if(fresh){selected={...fresh,type};updateDetail(selected);}
     renderList();
   }catch(e){document.getElementById('det-err').innerHTML=`<div class="error-msg">⚠️ ${e.message}</div>`;}
-  finally{btn.disabled=false;btn.classList.remove('spinning');}
+  finally{
+    const b1=document.getElementById('ref-btn');
+    const b2=document.getElementById('ref-btn2');
+    if(b1){b1.disabled=false;b1.classList.remove('spinning');}
+    if(b2){b2.disabled=false;b2.classList.remove('spinning');}
+  }
 }
 
 function updateDetail(p){
@@ -850,72 +916,121 @@ function updateDetail(p){
   }
   if(type==='parking'){
     const nb=p.places_disponibles,cap=p.nb_places,s=getStatus(nb,cap),isOp=p.gestionnaire!=='TCL';
-    document.getElementById('det-num').textContent=(nb===null||nb<0)?'—':nb;
-    document.getElementById('det-num').className='det-num c-'+s.c;
-    document.getElementById('det-pct').textContent=(cap&&s.pct!==undefined)?(100-s.pct)+'% occupé':'—';
-    document.getElementById('det-prog').style.width=s.pct+'%';
-    document.getElementById('det-prog').className='prog-fill bg-'+s.c;
-    document.getElementById('det-status').textContent=p.etat==='données indisponibles'?'Données indisponibles':s.lbl;
-    document.getElementById('det-status').className='status-pill c-'+s.c;
-    document.getElementById('det-cap').textContent=cap?cap+' places':'—';
-    document.getElementById('det-pmr').textContent=p.nb_pmr?p.nb_pmr+' places':'—';
-    document.getElementById('sec-tarifs').style.display=isOp?'block':'none';
-    if(isOp){
-      document.getElementById('t1h').textContent=p.tarif_1h?p.tarif_1h+' €':'—';
-      document.getElementById('t2h').textContent=p.tarif_2h?p.tarif_2h+' €':'—';
-      document.getElementById('t4h').textContent=p.tarif_4h?p.tarif_4h+' €':'—';
-      document.getElementById('t24h').textContent=p.tarif_24h?p.tarif_24h+' €':'—';
+    // ── Header ──
+    const logo=document.getElementById('fp-logo');
+    const logoColors={TCL:'#005ba9',LPA:'#e8a000',INDIGO:'#5E35B1','Q PARK':'#2E7D32'};
+    logo.style.background=logoColors[p.gestionnaire]||'#888';
+    logo.style.color='white';
+    logo.textContent=p.gestionnaire==='Q PARK'?'QPK':p.gestionnaire||'P';
+    document.getElementById('fp-title').textContent=p.nom;
+    const starEl=document.getElementById('fp-star');
+    starEl.textContent=isFav(p.id)?'★':'☆';
+    starEl.className='fp-star'+(isFav(p.id)?' on':'');
+    starEl.onclick=()=>{toggleFav(p.id,{preventDefault:()=>{},stopPropagation:()=>{},stopImmediatePropagation:()=>{}});starEl.textContent=isFav(p.id)?'★':'☆';starEl.className='fp-star'+(isFav(p.id)?' on':'');};
+    // ── Statut places ──
+    const numEl=document.getElementById('fp-num');
+    numEl.textContent=(nb===null||nb<0)?'—':nb;
+    numEl.className='fp-num c-'+s.c;
+    const alerteEl=document.getElementById('fp-alerte');
+    if(s.alerte){alerteEl.textContent='· '+s.alerte;alerteEl.style.color=s.c==='red'?'var(--red)':'var(--amber)';alerteEl.style.display='inline';}
+    else alerteEl.style.display='none';
+    const badgeEl=document.getElementById('fp-badge');
+    badgeEl.textContent=p.etat==='données indisponibles'?'Indisponible':s.lbl;
+    badgeEl.className='fp-badge c-'+s.c;
+    // ── Capacité · PMR · màj ──
+    document.getElementById('fp-cap').textContent=cap?cap:'—';
+    document.getElementById('fp-pmr').textContent=p.nb_pmr||'—';
+    const ts=p.last_update;
+    const updEl=document.getElementById('fp-upd');
+    if(ts){const d=new Date(ts);const old=fmtDate(ts);updEl.textContent=old?`⚠ ${old}`:'màj '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});updEl.style.color=old?'var(--red)':'var(--muted)';}
+    // ── Barre ──
+    document.getElementById('fp-barre').style.width=(s.pct||0)+'%';
+    document.getElementById('fp-barre').style.background=s.c==='green'?'var(--green)':s.c==='amber'?'var(--amber)':'var(--red)';
+    document.getElementById('fp-barre-max').textContent=(cap||'?')+' places';
+    // ── Tarifs (LPA) ──
+    const tarifsBl=document.getElementById('fp-tarifs');
+    if(isOp&&(p.tarif_1h||p.tarif_2h||p.tarif_4h||p.tarif_24h)){
+      tarifsBl.style.display='flex';
+      document.getElementById('fp-t1').textContent=p.tarif_1h?p.tarif_1h+' €':'—';
+      document.getElementById('fp-t2').textContent=p.tarif_2h?p.tarif_2h+' €':'—';
+      document.getElementById('fp-t4').textContent=p.tarif_4h?p.tarif_4h+' €':'—';
+      document.getElementById('fp-t24').textContent=p.tarif_24h?p.tarif_24h+' €':'—';
+    } else tarifsBl.style.display='none';
+    // ── Navigation ──
+    const navBtn=document.getElementById('nav-btn');
+    if(navBtn){
+      if(p.lat&&p.lng){navBtn.href=`geo:${p.lat},${p.lng}?q=${encodeURIComponent(p.nom)}`;navBtn.style.opacity='1';navBtn.style.pointerEvents='auto';}
+      else{navBtn.href='#';navBtn.style.opacity='.4';navBtn.style.pointerEvents='none';}
     }
-    const hc=document.getElementById('det-horaires-inline');
-    if(p.horaires&&hc){
-      // Compacter les horaires en 1 ligne : supprimer les répétitions
-      const h=p.horaires.replace(/Ouvert de /gi,'🕐 ').replace(/ du /gi,' ').replace(/, et de /gi,' · ').replace(/ les /gi,' ');
-      hc.textContent=h; hc.style.display='block';
-    } else if(hc) hc.style.display='none';
-    const vvn=document.getElementById('sec-vv-near');
-    if(p.lat&&p.lng&&data.velov?.length){
+    const fpNav=document.getElementById('fp-nav');
+    if(fpNav){
+      if(p.lat&&p.lng) fpNav.href=`geo:${p.lat},${p.lng}?q=${encodeURIComponent(p.nom)}`;
+      else {fpNav.href='#';fpNav.style.opacity='.4';fpNav.style.pointerEvents='none';}
+    }
+    // ── Vélo'v le plus proche ──
+    const vvNumEl=document.getElementById('fp-vv-num');
+    const vvSubEl=document.getElementById('fp-vv-sub');
+    const vvDetEl=document.getElementById('fp-vv-detail');
+    if(p.lat&&p.lng&&data.velov?.length&&vvNumEl){
       const nearest=(data.velov||[]).filter(v=>v.en_service&&v.nom&&v.nom.trim()!=='')
         .map(v=>({...v,d:dist(p.lat,p.lng,v.lat,v.lng)})).sort((a,b)=>a.d-b.d)[0];
-      if(nearest){
-        vvn.style.display='block';
-        document.getElementById('vn-name').textContent=nearest.nom;
-        document.getElementById('vn-dist').textContent=fmtDist(nearest.d);
-        document.getElementById('vn-badges').innerHTML=
-          (nearest.velos_meca?`<span class="badge bm">⚙ ${nearest.velos_meca}</span>`:'')+
-          (nearest.velos_elec?`<span class="badge be">⚡ ${nearest.velos_elec}</span>`:'')+
-          `<span class="badge" style="background:var(--surface);color:var(--muted)">${nearest.places_libres} places libres</span>`;
-        if(vvNearBtn) vvNearBtn.href=`https://velov.grandlyon.com/#/map?lat=${nearest.lat}&lng=${nearest.lng}&zoom=17`;
-      }else vvn.style.display='none';
-    }else vvn.style.display='none';
-    // Bloc Citiz dans fiche parking
-    const secCitiz=document.getElementById('sec-parking-citiz');
-    const citizContent=document.getElementById('parking-citiz-content');
-    if(secCitiz&&citizContent&&p.citiz?.length){
-      secCitiz.style.display='block';
-      citizContent.innerHTML=p.citiz.map(s=>`
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
-          <span style="font-size:13px">🚗</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:11px;font-weight:800;color:var(--text)">${s.nom}</div>
-            <div style="font-size:9px;color:var(--muted)">${s.vehicules_dispo} véhicule${s.vehicules_dispo>1?'s':''} · ${(s.vehicules_detail||[]).map(v=>`${v.count} ${v.nom}${v.electrique?' ⚡':''}`).join(', ')}</div>
-          </div>
-        </div>`).join('');
-    } else if(secCitiz) secCitiz.style.display='none';
-    // Bloc Bornes dans fiche parking
-    const secBornes=document.getElementById('sec-parking-bornes');
-    const bornesContent=document.getElementById('parking-bornes-content');
-    if(secBornes&&bornesContent&&p.bornes?.length){
-      secBornes.style.display='block';
-      bornesContent.innerHTML=p.bornes.map(b=>{
-        const badgeCls=b.categorie==='rapide'?'br':b.categorie==='acceleree'?'ba':'bn';
-        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
-          <span class="borne-badge ${badgeCls}">${b.puissance_max_kw} kW</span>
-          <span style="font-size:9px;color:var(--text);font-weight:700">${b.operateur}</span>
-          <span style="font-size:9px;color:var(--muted)">${b.nb_points} pt · ${b.types_prise}</span>
-          ${b.tarif?`<span style="font-size:9px;color:var(--muted);font-style:italic">${b.tarif}</span>`:'<span style="font-size:9px;color:var(--muted);font-style:italic">Tarif : voir opérateur</span>'}
-        </div>`;
+      if(nearest&&nearest.d<800){
+        const elec=nearest.velos_elec>0?`<span class="fp-elec">⚡${nearest.velos_elec}</span>`:'';
+        vvNumEl.innerHTML=nearest.velos_dispo+' vélos'+elec;
+        if(vvSubEl) vvSubEl.textContent=nearest.velos_meca?`dont ${nearest.velos_meca} méca`:'';
+        if(vvDetEl) vvDetEl.textContent=(nearest.nom.length>22?nearest.nom.slice(0,20)+'…':nearest.nom)+' · '+fmtDist(nearest.d);
+      } else {
+        vvNumEl.textContent='—';
+        if(vvSubEl) vvSubEl.textContent='Aucune station proche';
+        if(vvDetEl) vvDetEl.textContent='';
+      }
+    }
+    // ── Citiz ──
+    const citizVeh=p.citiz?.length?p.citiz.reduce((acc,s)=>acc+(s.vehicules_dispo||0),0):0;
+    if(citizVeh>0){
+      const elecCount=p.citiz.reduce((acc,s)=>acc+(s.vehicules_detail||[]).filter(v=>v.electrique).reduce((a,v)=>a+v.count,0),0);
+      const elecBadge=elecCount>0?`<span class="fp-elec">⚡${elecCount}</span>`:'';
+      document.getElementById('fp-citiz-num').innerHTML=citizVeh+' véhicule'+(citizVeh>1?'s':'')+elecBadge;
+      document.getElementById('fp-citiz-sub').textContent='Citiz disponible';
+      document.getElementById('fp-citiz-detail').textContent=p.citiz[0]?.nom?.length>22?p.citiz[0].nom.slice(0,20)+'…':p.citiz[0]?.nom||'';
+    } else {
+      document.getElementById('fp-citiz-num').textContent='—';
+      document.getElementById('fp-citiz-sub').textContent='Aucun véhicule';
+      document.getElementById('fp-citiz-detail').textContent='';
+    }
+    // ── Bornes IRVE regroupées par opérateur ──
+    const bornesBl=document.getElementById('fp-bornes-bloc');
+    if(p.bornes?.length){
+      bornesBl.style.display='block';
+      // Regrouper par opérateur
+      const opMap={};
+      p.bornes.forEach(b=>{
+        const op=b.operateur||'—';
+        if(!opMap[op]) opMap[op]=[];
+        opMap[op].push(b);
+      });
+      document.getElementById('fp-bornes-content').innerHTML=Object.entries(opMap).map(([op,bs])=>{
+        const tags=bs.map(b=>{
+          const cls=b.categorie==='rapide'?'fp-tag-r':b.categorie==='acceleree'?'fp-tag-a':'fp-tag-n';
+          return `<span class="fp-borne-tag ${cls}">${b.puissance_max_kw} kW · ${b.nb_points} pts</span>`;
+        }).join('');
+        return `<div class="fp-borne-row"><span class="fp-borne-op">${op}</span>${tags}</div>`;
       }).join('');
-    } else if(secBornes) secBornes.style.display='none';
+    } else bornesBl.style.display='none';
+    // ── Horaires ──
+    const horBl=document.getElementById('fp-horaires-bloc');
+    if(p.horaires){
+      horBl.style.display='block';
+      document.getElementById('fp-horaires-txt').textContent=p.horaires;
+    } else horBl.style.display='none';
+    // ── Adresse (LPA) ──
+    const adrBl=document.getElementById('fp-adresse-bloc');
+    if(isOp&&p.adresse){
+      adrBl.style.display='block';
+      document.getElementById('fp-adresse-txt').textContent=p.adresse;
+    } else adrBl.style.display='none';
+    // Màj footer
+    document.getElementById('det-upd').textContent=ts?'Données : '+(new Date(ts)).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'—';
   }
   if(type==='velov'){
     document.getElementById('vv-dispo').textContent=p.velos_dispo||0;
