@@ -309,9 +309,10 @@
   <div class="view-row">
     <button class="view-btn" id="map-btn" onclick="toggleMap()">🗺 Carte</button>
     <button class="fav-btn" id="fav-btn" onclick="toggleFavFilter()">★ Favoris</button>
+    <button class="fav-btn" id="near-btn" onclick="nearMe()">📍 Près de moi</button>
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
-      <input class="search-input" id="search" type="text" placeholder="Rechercher..." oninput="renderList()"/>
+      <input class="search-input" id="search" type="text" placeholder="Rech..." oninput="renderList()"/>
     </div>
   </div>
 </div>
@@ -533,6 +534,7 @@ let mapVisible = false, fromDetail = false, fromMap = false;
 let favOnly = false;
 let favorites = JSON.parse(localStorage.getItem('mral_fav')||'[]');
 let selected = null, refTimer = null;
+let userLat = null, userLng = null, nearActive = false;
 let fromParking = null; // stocke la fiche parking d'origine
 let map = null, markers = [];
 let mapLayers = {pr:true,pk:false,vv:false,ve:false};
@@ -611,6 +613,13 @@ function switchSub(s){
   if(selected) closeDetail();
   sub=s;
   document.getElementById('search').value='';
+  // Réinitialiser "Près de moi" au changement d'onglet
+  nearActive=false;
+  const nearBtn=document.getElementById('near-btn');
+  if(nearBtn){
+    nearBtn.classList.remove('on');
+    nearBtn.style.display=(s==='tcl')?'none':'';
+  }
   const statTabs=['pr','pk','ve'];
   const depTabs=['vv','tcl','ap'];
   const isStatTab=statTabs.includes(s);
@@ -666,6 +675,56 @@ function toggleFavFilter(){
   renderList();
 }
 
+// ── PRÈS DE MOI ──
+function haversine(lat1,lng1,lat2,lng2){
+  if(lat2==null||lng2==null) return 99999;
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function fmtDist(km){return km<1?(Math.round(km*1000)+' m'):(km<10?km.toFixed(1)+' km':Math.round(km)+' km');}
+
+function nearMe(){
+  if(!navigator.geolocation){
+    showToast('Géolocalisation non disponible sur cet appareil.');
+    return;
+  }
+  const btn=document.getElementById('near-btn');
+  // Si déjà actif → désactiver
+  if(nearActive){
+    nearActive=false;
+    userLat=null; userLng=null;
+    if(btn) btn.classList.remove('on');
+    renderList();
+    return;
+  }
+  if(btn){btn.textContent='📍 …';btn.disabled=true;}
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      userLat=pos.coords.latitude;
+      userLng=pos.coords.longitude;
+      nearActive=true;
+      if(btn){btn.textContent='📍 Près de moi';btn.disabled=false;btn.classList.add('on');}
+      renderList();
+    },
+    err=>{
+      if(btn){btn.textContent='📍 Près de moi';btn.disabled=false;}
+      const msgs={1:'Accès à la position refusé.',2:'Position introuvable.',3:'Délai dépassé.'};
+      showToast(msgs[err.code]||'Géolocalisation impossible.');
+    },
+    {timeout:8000,maximumAge:60000}
+  );
+}
+
+function showToast(msg){
+  let t=document.getElementById('toast-near');
+  if(!t){t=document.createElement('div');t.id='toast-near';
+    t.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:9px 16px;border-radius:10px;font-size:12px;font-weight:700;z-index:9999;font-family:Nunito,sans-serif;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)';
+    document.body.appendChild(t);}
+  t.textContent=msg; t.style.display='block';
+  setTimeout(()=>{t.style.display='none';},3000);
+}
+
 // ── CARTE LAYERS ──
 function toggleMapLayer(l){mapLayers[l]=!mapLayers[l];updateMapToggleUI();renderMap();}
 function updateMapToggleUI(){
@@ -707,6 +766,11 @@ function renderList(){
 
   if(q) list=list.filter(p=>(p.nom||'').toLowerCase().includes(q)||(p.adresse||'').toLowerCase().includes(q));
   if(favOnly&&(sub==='pr'||sub==='pk')) list=list.filter(p=>isFav(p.id));
+  // Tri par distance si "Près de moi" actif
+  if(nearActive&&userLat!==null&&userLng!==null){
+    list=list.map(p=>({...p,_dist:haversine(userLat,userLng,p.lat,p.lng)}));
+    list.sort((a,b)=>(a._dist||99999)-(b._dist||99999));
+  }
   if(!list.length&&sub!=='ve'){el.innerHTML='<div class="empty-msg">Aucun résultat</div>';return;}
 
   let html='';
@@ -766,6 +830,7 @@ function pHTML(p){
   const nb=p.places_disponibles,cap=p.nb_places,s=getStatus(nb,cap),g=gIcon(p.gestionnaire),fav=isFav(p.id);
   const meta=sub==='pk'?`${p.adresse||''} · ${p.tarif_1h?p.tarif_1h+' €/h':'Tarif N/D'}`:`${cap||'?'} places · Gratuit TCL`;
   const old=fmtDate(p.last_update);
+  const distBadge=nearActive&&p._dist!=null?`<div style="font-size:9px;color:var(--muted);font-weight:700;text-align:right">${fmtDist(p._dist)}</div>`:'';
   return `<div class="parking-item ${fav?'favori':''} ${(nb===null||nb<0)?'dim':''}" onclick="showDetail('${p.id}','parking')">
     <button class="star-btn ${fav?'on':''}" onclick="toggleFav('${p.id}',event)" ontouchend="toggleFav('${p.id}',event)">${fav?'★':'☆'}</button>
     <div class="p-icon ${g.c}">${g.l}</div>
@@ -775,6 +840,7 @@ function pHTML(p){
         <div class="p-places c-${s.c}">${(nb===null||nb<0)?'—':nb}</div>
         <div class="p-cap">/ ${cap||'?'}</div>
         ${old?`<div class="p-old">⚠ ${old}</div>`:''}
+        ${distBadge}
       </div>
       <div class="p-dot bg-${s.c}"></div>
     </div>
@@ -802,6 +868,7 @@ function borneHTML(b){
 function vvHTML(v){
   const ok=v.en_service&&v.velos_dispo>0;
   const fav=isFav(v.id);
+  const distBadge=nearActive&&v._dist!=null?`<div style="font-size:9px;color:var(--muted);font-weight:700;text-align:right">${fmtDist(v._dist)}</div>`:'';
   return `<div class="parking-item ${fav?'favori':''}" onclick="showDetail('${v.id}','velov')">
     <button class="star-btn ${fav?'on':''}" onclick="toggleFav('${v.id}',event)" ontouchend="toggleFav('${v.id}',event)">${fav?'★':'☆'}</button>
     <div class="p-icon g-vv">🚲</div>
@@ -817,6 +884,7 @@ function vvHTML(v){
       <div class="p-right-col">
         <div class="p-places ${ok?'c-green':'c-gray'}">${v.velos_dispo}</div>
         <div class="p-cap">/ ${v.capacite}</div>
+        ${distBadge}
       </div>
       <div class="p-dot ${ok?'bg-green':'bg-gray'}"></div>
     </div>
@@ -824,6 +892,7 @@ function vvHTML(v){
 }
 
 function apHTML(v,svc){
+  const distBadge=nearActive&&v._dist!=null?`<div style="font-size:9px;color:var(--muted);font-weight:700;text-align:right">${fmtDist(v._dist)}</div>`:'';
   if(svc==='citiz') return `<div class="parking-item" onclick="showDetail('${v.id}','citiz')">
     <div style="width:40px;height:40px;flex-shrink:0"></div>
     <div class="p-icon g-ap">🚗</div>
@@ -832,6 +901,7 @@ function apHTML(v,svc){
       <div class="p-right-col">
         <div class="p-places c-green">${v.vehicules_dispo}</div>
         <div class="p-cap">véhicule${v.vehicules_dispo>1?'s':''}</div>
+        ${distBadge}
       </div>
       <div class="p-dot bg-green"></div>
     </div>
@@ -841,7 +911,10 @@ function apHTML(v,svc){
     <div class="p-icon g-ap">${v.electrique?'⚡':'🚗'}</div>
     <div class="p-info"><div class="p-name">${v.nom}</div><div class="p-meta">${v.electrique?'Électrique':'Thermique'} · ${v.autonomie_km} km</div></div>
     <div class="p-right">
-      <div style="font-size:8px;color:var(--green);font-weight:800;margin-right:6px">DISPO</div>
+      <div class="p-right-col">
+        <div style="font-size:8px;color:var(--green);font-weight:800;margin-right:6px">DISPO</div>
+        ${distBadge}
+      </div>
     </div>
   </div>`;
 }
@@ -1341,6 +1414,8 @@ function copyAddress(){
 switchSub('pr');
 loadData();
 setInterval(()=>{if(!selected) loadData();},120000);
+// Masquer "Près de moi" si onglet TCL actif au démarrage
+(function(){const nb=document.getElementById('near-btn');if(nb&&sub==='tcl') nb.style.display='none';})();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
