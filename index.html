@@ -712,7 +712,7 @@ function nearMe(){
       const msgs={1:'Accès à la position refusé.',2:'Position introuvable.',3:'Délai dépassé.'};
       showToast(msgs[err.code]||'Géolocalisation impossible.');
     },
-    {timeout:8000,maximumAge:60000}
+    {timeout:15000,maximumAge:60000}
   );
 }
 
