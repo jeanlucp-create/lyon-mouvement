@@ -359,9 +359,9 @@
         <a id="tcl-det-btn" class="det-act-btn det-act-tcl" href="#" onclick="openTCL(event)" rel="noopener" style="display:none">
           🚇 TCL
         </a>
-        <a id="vv-det-btn" class="det-act-btn det-act-vv" href="https://velov.grandlyon.com" target="_blank" rel="noopener" style="display:none">
-          🚲 Vélo'v
-        </a>
+        <button id="vv-det-btn" class="det-act-btn det-act-vv" onclick="copyAndReserveVelov()" style="display:none">
+          🚲 Copier l'adresse et Réserver sur Vélo'v
+        </button>
       </div>
     </div>
 
@@ -481,10 +481,10 @@
           <span style="color:var(--muted)"><span id="vv-barre-nb-places">—</span> places libres</span>
         </div>
         <!-- Bouton Réserver -->
-        <a id="vv-reserve-btn" href="https://velov.grandlyon.com" target="_blank" rel="noopener"
-           style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:12px;background:var(--orange);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;text-decoration:none;margin-bottom:8px;margin-top:8px">
-          🚲 Réserver sur Vélo'v
-        </a>
+        <button id="vv-reserve-btn" onclick="copyAndReserveVelov()"
+           style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:12px;background:var(--orange);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;text-decoration:none;margin-bottom:8px;margin-top:8px;width:100%;border:none;cursor:pointer">
+          🚲 Copier l'adresse et Réserver sur Vélo'v
+        </button>
         <!-- Adresse -->
         <div class="fp-horaires" id="vv-adresse-bloc" style="display:none">
           <div class="fp-horaires-lbl">📍 Adresse</div>
@@ -712,7 +712,7 @@ function nearMe(){
       const msgs={1:'Accès à la position refusé.',2:'Position introuvable.',3:'Délai dépassé.'};
       showToast(msgs[err.code]||'Géolocalisation impossible.');
     },
-    {timeout:15000,maximumAge:60000}
+    {timeout:8000,maximumAge:60000}
   );
 }
 
@@ -1086,9 +1086,6 @@ function updateDetail(p){
   const isDepl=(type==='velov'||type==='citiz'||type==='leo');
   tclDetBtn.style.display=(!isDepl)?'flex':'none';
   vvDetBtn.style.display=type==='velov'?'flex':'none';
-  if(type==='velov'&&p.lat&&p.lng){
-    vvDetBtn.href=`https://velov.grandlyon.com/#/map?lat=${p.lat}&lng=${p.lng}&zoom=17`;
-  }
   if(p.lat&&p.lng){
     document.getElementById('nav-btn').href=`geo:${p.lat},${p.lng}?q=${encodeURIComponent(p.nom)}`;
     document.getElementById('nav-btn').style.opacity='1';
@@ -1333,7 +1330,7 @@ function addM(lat,lng,color,sz,lbl,name,sub,type,borderColor,vvMeca,vvElec,itemI
     iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
   const navUrl=`geo:${lat},${lng}?q=${encodeURIComponent(name)}`;
   const tclBtn=type==='parking'?`<a href="#" onclick="openTCL(event)" class="lp-btn lp-btn-tcl">🚇 Itinéraire TCL</a>`:'';
-  const vvBtn=type==='velov'?`<a href="https://velov.grandlyon.com/#/map?lat=${lat}&lng=${lng}&zoom=17" target="_blank" class="lp-btn lp-btn-tcl">🚲 Réserver sur Vélo'v</a>`:'';
+  const vvBtn=type==='velov'?`<button onclick="copyAndReserveVelovFromMap(${lat},${lng},${JSON.stringify(name)})" class="lp-btn lp-btn-tcl" style="border:none;cursor:pointer;width:100%">📋 Réserver sur Vélo'v</button>`:'';
   const vvDetail=type==='velov'?`<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">
     ${vvMeca?`<span style="background:#FFF3EE;color:#CC5500;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid #FFD9C8">⚙ ${vvMeca}</span>`:''}
     ${vvElec?`<span style="background:#EBF4FF;color:#1565C0;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid #B5D4F4">⚡ ${vvElec}</span>`:''}
@@ -1409,6 +1406,34 @@ function copyAddress(){
     document.body.appendChild(el); el.select();
     document.execCommand('copy'); document.body.removeChild(el);
     doFeedback();
+  });
+}
+
+function copyAndReserveVelov(){
+  if(!selected) return;
+  let txt=selected.nom||'';
+  if(selected.adresse) txt+=', '+selected.adresse;
+  const url=`https://velov.grandlyon.com/#/map?lat=${selected.lat}&lng=${selected.lng}&zoom=17`;
+  const open=()=>{ showToast('📋 Adresse copiée !'); setTimeout(()=>window.open(url,'_blank'),300); };
+  navigator.clipboard.writeText(txt).then(open).catch(()=>{
+    const el=document.createElement('textarea');
+    el.value=txt; el.style.position='fixed'; el.style.opacity='0';
+    document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    open();
+  });
+}
+
+function copyAndReserveVelovFromMap(lat,lng,name){
+  const txt=(name||'').replace('🚲 ','');
+  const url=`https://velov.grandlyon.com/#/map?lat=${lat}&lng=${lng}&zoom=17`;
+  const open=()=>{ showToast('📋 Adresse copiée !'); setTimeout(()=>window.open(url,'_blank'),300); };
+  navigator.clipboard.writeText(txt).then(open).catch(()=>{
+    const el=document.createElement('textarea');
+    el.value=txt; el.style.position='fixed'; el.style.opacity='0';
+    document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    open();
   });
 }
 switchSub('pr');
