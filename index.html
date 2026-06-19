@@ -1227,6 +1227,17 @@ function updateDetail(p){
     // Header
     const titleEl=document.getElementById('vv-title');
     if(titleEl) titleEl.textContent=p.nom||'Station Vélo\'v';
+    // Étoile favoris
+    const vvStarEl=document.getElementById('vv-star');
+    if(vvStarEl){
+      vvStarEl.textContent=isFav(p.id)?'★':'☆';
+      vvStarEl.className='fp-star'+(isFav(p.id)?' on':'');
+      vvStarEl.onclick=()=>{
+        toggleFav(p.id,{preventDefault:()=>{},stopPropagation:()=>{},stopImmediatePropagation:()=>{}});
+        vvStarEl.textContent=isFav(p.id)?'★':'☆';
+        vvStarEl.className='fp-star'+(isFav(p.id)?' on':'');
+      };
+    }
     // Infos
     document.getElementById('vv-dispo').textContent=p.velos_dispo||0;
     document.getElementById('vv-docks').textContent=p.places_libres||0;
