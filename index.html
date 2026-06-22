@@ -626,6 +626,63 @@ function gIcon(g){
 function colHex(c){return {green:'#2ECC71',amber:'#FF9500',red:'#FF3B30',gray:'#AAA'}[c]||'#AAA'}
 
 // ── CHARGEMENT ──
+// ── DONNÉES MOCK pour test local (CORS bloque le worker en file://) ──
+const MOCK_DATA = {
+  parkings: {
+    tcl: [
+      { id:'MERP', nom:'Mermoz-Pinel', gestionnaire:'TCL', nb_places:542, places_disponibles:187,
+        nb_pmr:10, lat:45.7304861, lng:4.8897761, last_update:new Date().toISOString(),
+        bornes:[
+          { id:'FRGLYPLYON145', nom:'BRN06 MERMOZ PINEL', operateur:'IZIVIA',
+            adresse:'Avenue Mermoz, Vénissieux', lat:45.7302, lng:4.8901,
+            nb_points:11, puissance_max_kw:150, types_prise:'Type 2, CCS Combo 2, CHAdeMO',
+            categorie:'rapide', pdc_ids:[] },
+          { id:'FRGLYPLYON146', nom:'BRN07 MERMOZ PINEL AC', operateur:'IZIVIA',
+            adresse:'Avenue Mermoz, Vénissieux', lat:45.7306, lng:4.8899,
+            nb_points:4, puissance_max_kw:22, types_prise:'Type 2',
+            categorie:'acceleree', pdc_ids:[] },
+        ],
+        citiz:[], horaires:'24h/24 · 7j/7' },
+      { id:'PAR', nom:'Parilly', gestionnaire:'TCL', nb_places:904, places_disponibles:412,
+        nb_pmr:15, lat:45.7201496, lng:4.8857467, last_update:new Date().toISOString(),
+        bornes:[
+          { id:'FRGLYPLYON089', nom:'BRN04 PARILLY', operateur:'IZIVIA',
+            adresse:'Boulevard des États-Unis, Vénissieux', lat:45.7198, lng:4.8861,
+            nb_points:6, puissance_max_kw:50, types_prise:'Type 2, CCS Combo 2',
+            categorie:'rapide', pdc_ids:[] },
+        ],
+        citiz:[], horaires:'24h/24 · 7j/7' },
+    ],
+    operateurs: [
+      { id:'LPA-BER1', nom:'Béraudier P1', gestionnaire:'LPA', nb_places:340, places_disponibles:52,
+        nb_pmr:8, lat:45.7609, lng:4.8598, last_update:new Date().toISOString(),
+        adresse:'Place Charles Béraudier, Lyon 3e',
+        tarif_1h:2.5, tarif_2h:4.5, tarif_4h:7.5, tarif_24h:22,
+        bornes:[
+          { id:'FRGLYPLYON201', nom:'BRN12 BERAUDIER', operateur:'IZIVIA',
+            adresse:'Place Charles Béraudier, Lyon 3e', lat:45.7611, lng:4.8601,
+            nb_points:5, puissance_max_kw:22, types_prise:'Type 2',
+            categorie:'acceleree', pdc_ids:[] },
+          { id:'FRGLYPLYON202', nom:'BRN13 BERAUDIER RAPIDE', operateur:'IZIVIA',
+            adresse:'Place Charles Béraudier, Lyon 3e', lat:45.7608, lng:4.8596,
+            nb_points:2, puissance_max_kw:150, types_prise:'CCS Combo 2, CHAdeMO',
+            categorie:'rapide', pdc_ids:[] },
+        ],
+        citiz:[] },
+    ]
+  },
+  velov: [
+    { id:1001, nom:'Bellecour - Place Bellecour', adresse:'Place Bellecour, Lyon 2e',
+      lat:45.7578, lng:4.8320, capacite:30, velos_dispo:12, velos_meca:8, velos_elec:4,
+      places_libres:18, en_service:true, last_reported:Math.floor(Date.now()/1000) },
+    { id:1002, nom:'Part-Dieu - Gare', adresse:'Rue de la Villette, Lyon 3e',
+      lat:45.7605, lng:4.8597, capacite:40, velos_dispo:5, velos_meca:3, velos_elec:2,
+      places_libres:35, en_service:true, last_reported:Math.floor(Date.now()/1000) },
+  ],
+  autopartage: { citiz:[], leoandgo:[] },
+  bornes: [],
+};
+
 async function loadData(){
   document.getElementById('err-zone').innerHTML='';
   try{
@@ -652,8 +709,12 @@ async function loadData(){
       }
     }).catch(()=>{});
   }catch(e){
-    document.getElementById('err-zone').innerHTML=`<div class="error-msg">⚠️ ${e.message}</div>`;
-    document.getElementById('item-list').innerHTML='';
+    // ── FALLBACK : données mock pour test en local (file://) ──
+    console.warn('Worker inaccessible, chargement des données mock de test :', e.message);
+    data = MOCK_DATA;
+    document.getElementById('err-zone').innerHTML=
+      '<div style="background:#FFF3CD;border:1px solid #FFD700;border-radius:8px;padding:8px 12px;font-size:10px;color:#856404;font-weight:700;margin-bottom:6px">⚠️ Mode test local — données fictives (déployer sur GitHub Pages pour les vraies données)</div>';
+    renderList();
   }
 }
 
