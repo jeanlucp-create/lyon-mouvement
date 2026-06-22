@@ -765,7 +765,7 @@ function renderList(){
   else if(sub==='ap') list=[...(data.autopartage?.citiz||[]),...(data.autopartage?.leoandgo||[])];
 
   if(q) list=list.filter(p=>(p.nom||'').toLowerCase().includes(q)||(p.adresse||'').toLowerCase().includes(q));
-  if(favOnly&&(sub==='pr'||sub==='pk')) list=list.filter(p=>isFav(p.id));
+  if(favOnly&&(sub==='pr'||sub==='pk'||sub==='vv')) list=list.filter(p=>isFav(p.id));
   // Tri par distance si "Près de moi" actif
   if(nearActive&&userLat!==null&&userLng!==null){
     list=list.map(p=>({...p,_dist:haversine(userLat,userLng,p.lat,p.lng)}));
