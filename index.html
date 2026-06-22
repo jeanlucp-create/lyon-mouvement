@@ -1130,9 +1130,10 @@ function showBorne(idx){
   iconEl.style.background=b.categorie==='rapide'?'#E8F5E9':b.categorie==='acceleree'?'#E3F2FD':'#FFF3E0';
   iconEl.style.color=b.categorie==='rapide'?'#2E7D32':b.categorie==='acceleree'?'#1565C0':'#E65C00';
 
-  // Nom : nom de la borne ou ID station
+  // Nom + adresse
   document.getElementById('borne-title').textContent=b.nom||b.id||'Borne de recharge';
-  document.getElementById('borne-op').textContent=b.operateur||'—';
+  const opEl=document.getElementById('borne-op');
+  opEl.textContent=(b.operateur||'—')+(b.adresse?' · '+b.adresse:'');
 
   // Puissance
   const kw=fixKw(b.puissance_max_kw);
@@ -1144,19 +1145,22 @@ function showBorne(idx){
   // Types de prise
   const prisesEl=document.getElementById('borne-prises');
   if(b.types_prise&&b.types_prise.trim()){
-    const prises=b.types_prise.split(/[,;/·]+/).map(s=>s.trim()).filter(Boolean);
+    const prises=b.types_prise.split(/[,;]+/).map(s=>s.trim()).filter(Boolean);
     prisesEl.innerHTML=prises.map(p=>`<span class="borne-prise-tag">${p}</span>`).join('');
   } else {
     prisesEl.innerHTML='<span style="font-size:11px;color:var(--muted)">Non renseigné</span>';
   }
 
-  // Bouton navigation
+  // Label bouton dispo
+  document.getElementById('borne-dispo-btn').textContent='⚡ Voir disponibilité sur ChargeMap ↗';
+
+  // Bouton navigation — utilise lat/lng de la borne ou du parking parent
   const navBtn=document.getElementById('borne-nav-btn');
-  if(b.lat&&b.lng){
-    navBtn.href=`geo:${b.lat},${b.lng}?q=${encodeURIComponent(b.nom||'Borne recharge')}`;
-    navBtn.style.display='flex';
-  } else if(selected.lat&&selected.lng){
-    navBtn.href=`geo:${selected.lat},${selected.lng}?q=${encodeURIComponent(selected.nom)}`;
+  const lat=b.lat||selected.lat;
+  const lng=b.lng||selected.lng;
+  const nom=b.nom||selected.nom||'Borne recharge';
+  if(lat&&lng){
+    navBtn.href=`geo:${lat},${lng}?q=${encodeURIComponent(nom)}`;
     navBtn.style.display='flex';
   } else {
     navBtn.style.display='none';
@@ -1172,15 +1176,9 @@ function closeBorne(){
 
 function openBorneDispo(){
   if(!selectedBorne) return;
-  const op=(selectedBorne.operateur||'').toLowerCase();
-  let url;
-  if(op.includes('izivia'))          url='https://fronts-map.izivia.com/';
-  else if(op.includes('freshmile'))  url='https://map.freshmile.com/';
-  else if(op.includes('totalenerg')) url='https://www.totalenergies.fr/particuliers/electrique/recharge/carte-des-bornes';
-  else if(op.includes('electra'))    url='https://www.electra.site/map';
-  else if(op.includes('ionity'))     url='https://ionity.eu/fr/chargeur/carte';
-  else if(op.includes('charge unix') || op.includes('chargeunix')) url='https://charge-unix.fr/map';
-  else                               url='https://www.chargemap.com/map';
+  const lat=selectedBorne.lat||selected?.lat;
+  const lng=selectedBorne.lng||selected?.lng;
+  const url=lat&&lng?`https://fr.chargemap.com/map#${lat},${lng},17`:'https://fr.chargemap.com/map';
   window.open(url,'_blank','noopener');
 }
 
