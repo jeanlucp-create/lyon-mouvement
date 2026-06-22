@@ -1174,10 +1174,8 @@ async function refreshDetail(){
 // ── FICHE BORNE ──
 let selectedBorne = null;
 
-function showBorne(idx){
-  if(!selected||!selected.bornes) return;
-  const b = selected.bornes[idx];
-  if(!b) return;
+function showBorne(b){
+  if (!b) return;
   selectedBorne = b;
 
   // Masquer sec-parking, afficher sec-borne
@@ -1197,8 +1195,11 @@ function showBorne(idx){
   opEl.textContent=(b.operateur||'—')+(b.adresse?' · '+b.adresse:'');
 
   // Puissance
-  const kw=fixKw(b.puissance_max_kw);
-  document.getElementById('borne-kw').textContent=kw?kw+' kW':'—';
+  const kw = b.puissance_max_kw || 0;
+  document.getElementById('borne-kw').textContent =
+  (b.puissance_max_kw && b.puissance_max_kw > 0)
+    ? b.puissance_max_kw + ' kW'
+    : '—';
 
   // Points
   document.getElementById('borne-pts').textContent=b.nb_points||'—';
@@ -1392,7 +1393,7 @@ function updateDetail(p){
       document.getElementById('fp-bornes-content').innerHTML=p.bornes.map((b,i)=>{
         const kw=fixKw(b.puissance_max_kw);
         const cls=b.categorie==='rapide'?'fp-tag-r':b.categorie==='acceleree'?'fp-tag-a':'fp-tag-n';
-        return `<div class="fp-borne-row" onclick="showBorne(${i})">
+        return `<div class="fp-borne-row" onclick='showBorne(${JSON.stringify(b)})'>
           <span class="fp-borne-op">${b.operateur||'—'}</span>
           <span class="fp-borne-tag ${cls}">${kw||'?'} kW</span>
           <span style="font-size:9px;color:var(--muted);font-weight:600">${b.nb_points} pt${b.nb_points>1?'s':''}</span>
