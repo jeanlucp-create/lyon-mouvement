@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mobilité Lyon</title>
@@ -10,27 +9,10 @@
 
 <style>
 body { font-family:Arial; margin:0; }
-
 #map { height:50vh; }
-
-.item {
-  padding:10px;
-  border-bottom:1px solid #ddd;
-  cursor:pointer;
-}
-
-.item:hover {
-  background:#f5f5f5;
-}
-
-.borne {
-  background:#eee;
-  margin:4px 0;
-  padding:6px;
-  cursor:pointer;
-}
+.item { padding:10px; border-bottom:1px solid #ddd; cursor:pointer; }
+.borne { background:#f5f5f5; margin:4px 0; padding:6px; }
 </style>
-
 </head>
 
 <body>
@@ -44,57 +26,38 @@ body { font-family:Arial; margin:0; }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-
 const API = "https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev";
 
 let data = {};
 let selected = null;
-let map;
+let map = L.map('map').setView([45.75,4.85],12);
 
-// ✅ SAFE
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// ✅ SAFE HELPER
 function safe(v){ return v ?? '—'; }
 
-// ── LOAD ──
+// ── LOAD DATA ──
 async function load(){
   try{
     const r = await fetch(API);
     data = await r.json();
-
-    initMap();
     render();
-
   }catch(e){
     document.getElementById("list").innerHTML="Erreur API";
-    console.error(e);
   }
-}
-
-// ── MAP INIT ──
-function initMap(){
-  map = L.map('map').setView([45.75,4.85],12);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 }
 
 // ── LIST ──
 function render(){
-
   const list = document.getElementById("list");
   list.innerHTML = "";
 
   data.parkings.tcl.forEach(p=>{
-
     const el = document.createElement("div");
-    el.className = "item";
-
-    el.innerHTML = `
-      🚇 ${p.nom}
-      <br>
-      ${safe(p.places_disponibles)} / ${safe(p.nb_places)}
-    `;
-
+    el.className="item";
+    el.innerHTML = `🚇 ${p.nom} (${safe(p.places_disponibles)})`;
     el.onclick = ()=>showDetail(p);
-
     list.appendChild(el);
   });
 
@@ -103,40 +66,34 @@ function render(){
 
 // ── DETAIL ──
 function showDetail(p){
-
   selected = p;
+  const el = document.getElementById("detail");
 
   let html = `<h3>${p.nom}</h3>`;
-  html += `<p>${safe(p.places_disponibles)} / ${safe(p.nb_places)} places</p>`;
+  html += `<p>${p.places_disponibles} places</p>`;
 
   if(p.bornes?.length){
-
     html += "<h4>⚡ Bornes</h4>";
 
     p.bornes.forEach((b,i)=>{
       html += `
-        <div class="borne" onclick="showBorne(${i})">
-          ${safe(b.operateur)} - ${safe(b.puissance_max_kw)} kW
-        </div>
-      `;
+      <div class="borne" onclick="showBorne(${i})">
+        ${safe(b.operateur)} - ${safe(b.puissance_max_kw)} kW
+      </div>`;
     });
 
   } else {
     html += "<p>Aucune borne</p>";
   }
 
-  document.getElementById("detail").innerHTML = html;
-
-  if(p.lat && p.lng){
-    map.setView([p.lat,p.lng],14);
-  }
+  el.innerHTML = html;
 }
 
-// ── BORNE ──
+// ── FICHE BORNE ──
 function showBorne(i){
 
   if(!selected?.bornes || !selected.bornes[i]){
-    console.warn("Borne introuvable");
+    console.warn("Borne introuvable", selected);
     return;
   }
 
@@ -145,7 +102,7 @@ function showBorne(i){
   let prises = [];
   if(b.types_prise){
     prises = b.types_prise.split(/[,;]+/)
-      .map(t=>t.trim())
+      .map(s=>s.trim())
       .filter(Boolean);
   }
 
@@ -153,22 +110,12 @@ function showBorne(i){
 
   document.getElementById("detail").innerHTML = `
     <h3>${safe(b.nom)}</h3>
-    <p>${safe(b.operateur)}</p>
-    <p>${safe(b.puissance_max_kw)} kW</p>
-    <p>${safe(b.nb_points)} points</p>
-    <p>${ptxt}</p>
-
-    <button onclick="navigate(${b.lat}, ${b.lng})">🧭 S'y rendre</button>
-    <br>
+    <p>Opérateur : ${safe(b.operateur)}</p>
+    <p>Puissance : ${safe(b.puissance_max_kw)} kW</p>
+    <p>Points : ${safe(b.nb_points)}</p>
+    <p>Prises : ${ptxt}</p>
     <button onclick="showDetail(selected)">← retour</button>
   `;
-}
-
-// ── NAVIGATION ──
-function navigate(lat,lng){
-  if(lat && lng){
-    window.open(`https://www.google.com/maps?q=${lat},${lng}`);
-  }
 }
 
 // ── MAP ──
@@ -185,10 +132,10 @@ function renderMap(){
 
     L.marker([p.lat,p.lng])
       .addTo(map)
-      .bindPopup(p.nom);
+      .bindPopup(`${p.nom}`);
   });
 
-  (data.bornes || []).forEach(b=>{
+  (data.bornes||[]).forEach(b=>{
     if(!b.lat || !b.lng) return;
 
     L.circleMarker([b.lat,b.lng],{
@@ -198,7 +145,6 @@ function renderMap(){
 }
 
 load();
-
 </script>
 
 </body>
