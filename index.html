@@ -1176,6 +1176,11 @@ let selectedBorne = null;
 
 function showBorne(b){
   if (!b) return;
+
+  if (typeof b === 'string') {
+    b = JSON.parse(b);
+  }
+
   selectedBorne = b;
 
   // Masquer sec-parking, afficher sec-borne
@@ -1393,7 +1398,7 @@ function updateDetail(p){
       document.getElementById('fp-bornes-content').innerHTML=p.bornes.map((b,i)=>{
         const kw=fixKw(b.puissance_max_kw);
         const cls=b.categorie==='rapide'?'fp-tag-r':b.categorie==='acceleree'?'fp-tag-a':'fp-tag-n';
-        return `<div class="fp-borne-row" onclick='showBorne(${JSON.stringify(b)})'>
+        return `<div class="fp-borne-row" onclick="showBorne(decodeURIComponent(&quot;${encodeURIComponent(JSON.stringify(b))}&quot;))">
           <span class="fp-borne-op">${b.operateur||'—'}</span>
           <span class="fp-borne-tag ${cls}">${kw||'?'} kW</span>
           <span style="font-size:9px;color:var(--muted);font-weight:600">${b.nb_points} pt${b.nb_points>1?'s':''}</span>
