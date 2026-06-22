@@ -566,6 +566,7 @@
 <script>
 const WORKER = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev';
 let data = {parkings:{tcl:[],operateurs:[]},velov:[],autopartage:{citiz:[],leoandgo:[]}};
+let bornesIndex = {}; // index bid → borne, construit au chargement
 let mode = 'stat'; // stat | dep
 let sub = 'pr';    // pr | pk | tcl | vv | ap
 let mapVisible = false, fromDetail = false, fromMap = false;
@@ -630,6 +631,9 @@ async function loadData(){
     fetch(WORKER).then(r2=>r2.ok?r2.json():null).then(full=>{
       if(full?.bornes?.length){
         data.bornes=full.bornes;
+        // Construire l'index bid→borne pour showBorneDetail
+        bornesIndex={};
+        full.bornes.forEach(b=>{ bornesIndex[borneId(b)]=b; });
         // Enrichir les parkings avec les bornes
         if(full.parkings){
           data.parkings=full.parkings;
@@ -901,7 +905,10 @@ function borneId(b){
   // Clé stable basée sur lat+lng arrondis, plus robuste que le nom qui peut être vide/identique
   const lat=b.lat?b.lat.toFixed(5):'0';
   const lng=b.lng?b.lng.toFixed(5):'0';
-  return 'borne_'+lat+'_'+lng+'_'+(b.operateur||'').replace(/\s/g,'');
+  // Nettoyer l'opérateur : UNIQUEMENT alphanumérique (évite apostrophes, accents, espaces qui cassent onclick)
+  const op=(b.operateur||'').replace(/[^a-zA-Z0-9]/g,'');
+  return 'borne_'+lat+'_'+lng+'_'+op;
+}
 }
 function borneHTML(b){
   const kw=fixKw(b.puissance_max_kw);
@@ -926,10 +933,10 @@ function borneHTML(b){
 }
 
 function showBorneDetail(bid){
-  const bornes=data.bornes||[];
-  const b=bornes.find(x=>borneId(x)===bid);
-  if(!b) return;
+  const b=bornesIndex[bid]||(data.bornes||[]).find(x=>borneId(x)===bid);
+  if(!b){console.warn('Borne non trouvée:',bid); return;}
   selected={...b,type:'borne',_bid:bid};
+  fromDetail=false; fromMap=false; fromParking=null;
   document.getElementById('detail-view').style.display='block';
   document.getElementById('det-action-bar').style.display='flex';
   document.getElementById('list-view').style.display='none';
