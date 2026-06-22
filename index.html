@@ -1152,7 +1152,7 @@ function showBorne(idx){
   }
 
   // Label bouton dispo
-  document.getElementById('borne-dispo-btn').textContent='⚡ Voir disponibilité sur ChargeMap ↗';
+  document.getElementById('borne-dispo-btn').textContent='🗺 Voir les bornes proches sur Google Maps ↗';
 
   // Bouton navigation — utilise lat/lng de la borne ou du parking parent
   const navBtn=document.getElementById('borne-nav-btn');
@@ -1178,7 +1178,11 @@ function openBorneDispo(){
   if(!selectedBorne) return;
   const lat=selectedBorne.lat||selected?.lat;
   const lng=selectedBorne.lng||selected?.lng;
-  const url=lat&&lng?`https://fr.chargemap.com/map#${lat},${lng},17`:'https://fr.chargemap.com/map';
+  const nom=encodeURIComponent((selectedBorne.nom||'Borne de recharge')+' '+( selectedBorne.operateur||''));
+  // Google Maps centré sur la borne — universel, sans compte, en français
+  const url=lat&&lng
+    ?`https://www.google.com/maps/search/borne+recharge/@${lat},${lng},17z`
+    :'https://www.google.com/maps/search/borne+recharge+lyon';
   window.open(url,'_blank','noopener');
 }
 
