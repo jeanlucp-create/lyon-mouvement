@@ -274,7 +274,9 @@
     .lp-btn-nav{background:var(--orange);color:white}
     .lp-btn-tcl{background:var(--orange-light);color:var(--orange-dark);border:1px solid var(--orange-border)}
 
-    @keyframes spin{to{transform:rotate(360deg)}}
+    /* Disque borne de recharge */
+    .borne-disc{width:22px;height:22px;border-radius:50%;background:#1B5E20;display:flex;align-items:center;justify-content:center;font-size:12px;color:white;flex-shrink:0}
+    .borne-disc-lg{width:28px;height:28px;border-radius:50%;background:#1B5E20;display:flex;align-items:center;justify-content:center;font-size:15px;color:white;flex-shrink:0}
   </style>
 </head>
 <body>
@@ -716,7 +718,7 @@ function pkHTML(p) {
   // Mini-icônes bornes
   let veMini = '';
   if (p.bornes && p.bornes.length > 0) {
-    veMini = `<span class="pk-mini-sep">·</span><span class="pk-mini-ve">${eclairs(p.bornes_categorie)} ${p.bornes_puissance_max}kW</span>`;
+    veMini = `<span class="pk-mini-sep">·</span><span class="pk-mini-ve"><span style="display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:#1B5E20;font-size:8px;color:white;vertical-align:middle;margin-right:1px">⚡</span>${eclairs(p.bornes_categorie)} ${p.bornes_puissance_max}kW</span>`;
   } else {
     veMini = `<span class="pk-mini-sep">·</span><span class="pk-mini-gray">Pas de borne</span>`;
   }
@@ -792,7 +794,7 @@ function pkExpandedHTML(p, s, cap, nb) {
   }
 
   // Bornes par opérateur
-  html += `<div class="exp-lbl">⚡ Bornes de recharge</div>`;
+  html += `<div class="exp-lbl" style="display:flex;align-items:center;gap:5px"><div class="borne-disc" style="width:16px;height:16px;font-size:9px">⚡</div> Bornes de recharge</div>`;
   const bornes = p.bornes || [];
   if (bornes.length) {
     html += `<div class="bornes-acc-wrap">`;
@@ -973,7 +975,7 @@ function borneHTML(b) {
 
   return `<div class="ve-card">
     <div class="ve-row" onclick="toggleVeAccordion(this)">
-      <div class="ve-icon ${iconCls}">⚡</div>
+      <div class="ve-icon ${iconCls}"><div class="borne-disc">⚡</div></div>
       <div class="ve-info">
         <div class="ve-nom">${b.nom}</div>
         <div class="ve-meta">${b.operateur||''}${b.adresse?' · '+b.adresse:''}${distBadge}</div>
@@ -1153,7 +1155,12 @@ function updateMapToggleUI() {
 
 function initMap() {
   map = L.map('map', {zoomControl:true}).setView([45.748, 4.846], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap', maxZoom:18}).addTo(map);
+  L.tileLayer(
+    'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0' +
+    '&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png' +
+    '&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+    {attribution:'© IGN-France — <a href="https://geoservices.ign.fr/">Géoplateforme</a>', maxZoom:18}
+  ).addTo(map);
   setTimeout(() => { map.invalidateSize(); renderMap(); }, 200);
 }
 
@@ -1181,11 +1188,59 @@ function renderMap() {
   });
 }
 
+function pinSVG(emoji, bg, border, nb, nbColor) {
+  // Goutte SVG : emoji catégorie + optionnellement un nombre en surimpression
+  const w = 36, h = 44;
+  const inner = nb !== null
+    ? `<circle cx="18" cy="18" r="12" fill="${nbColor||'rgba(0,0,0,0.55)'}"/>
+       <text x="18" y="23" text-anchor="middle" font-size="${String(nb).length>2?9:11}" font-family="monospace" font-weight="700" fill="white">${nb}</text>`
+    : `<text x="18" y="23" text-anchor="middle" font-size="15" font-family="system-ui">${emoji}</text>`;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 36 44" overflow="visible" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.22));display:block">
+    <path d="M18 2C9.2 2 2 9.2 2 18c0 10 16 24 16 24s16-14 16-24C34 9.2 26.8 2 18 2z" fill="${bg}" stroke="${border}" stroke-width="2"/>
+    ${inner}
+  </svg>`;
+}
+
 function addM(lat, lng, color, sz, lbl, name, sub, type, borderColor, vvMeca, vvElec, itemId) {
-  const border = borderColor || 'white';
+  // Choix icône emoji selon type
+  const emojiMap = {parking:'🅿', velov:'🚲', borne:'⚡'};
+  const emoji = emojiMap[type] || '📍';
+
+  // Couleurs fond/bordure selon type
+  const bgMap = {
+    parking: borderColor==='#1565C0' ? '#E8F5E9' : '#F9EEF4',
+    velov:   '#E3F2FD',
+    borne:   '#E8F5E9',
+  };
+  const bdMap = {
+    parking: borderColor==='#1565C0' ? '#2E7D32' : '#9C2A5A',
+    velov:   '#1565C0',
+    borne:   '#1B5E20',
+  };
+
+  // Pour parking et velo'v : afficher le nombre dans un disque coloré
+  const showNb = (type === 'parking' || type === 'velov') && lbl !== '?';
+  const nbVal = showNb ? lbl : null;
+  const nbColor = color; // couleur dispo (vert/orange/rouge)
+
+  const bg = bgMap[type] || '#FFF';
+  const bd = bdMap[type] || '#888';
+
+  // Pour borne : disque vert foncé avec ⚡ blanc au centre (pas de nb)
+  let html;
+  if (type === 'borne') {
+    html = `<svg width="36" height="44" viewBox="0 0 36 44" overflow="visible" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.22));display:block">
+      <path d="M18 2C9.2 2 2 9.2 2 18c0 10 16 24 16 24s16-14 16-24C34 9.2 26.8 2 18 2z" fill="${bg}" stroke="${bd}" stroke-width="2"/>
+      <circle cx="18" cy="18" r="10" fill="#1B5E20"/>
+      <text x="18" y="23" text-anchor="middle" font-size="12" font-family="system-ui" fill="white">⚡</text>
+    </svg>`;
+  } else {
+    html = pinSVG(emoji, bg, bd, nbVal, nbColor);
+  }
+
   const icon = L.divIcon({className:'',
-    html:`<div style="background:${color};color:white;border-radius:50%;width:${sz}px;height:${sz}px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:${sz>=30?11:9}px;font-weight:700;border:3px solid ${border};box-shadow:0 2px 6px rgba(0,0,0,.25)">${lbl}</div>`,
-    iconSize:[sz,sz], iconAnchor:[sz/2,sz/2]});
+    html,
+    iconSize:[36,44], iconAnchor:[18,44]});
   const navUrl = `geo:${lat},${lng}?q=${encodeURIComponent(name)}`;
   const tclBtn = type === 'parking' ? `<a href="#" onclick="openTCL(event)" class="lp-btn lp-btn-tcl">🚇 Itinéraire TCL</a>` : '';
   const vvBtn = type === 'velov' ? `<a href="https://velov.grandlyon.com/#/map?lat=${lat}&lng=${lng}&zoom=17" target="_blank" class="lp-btn lp-btn-tcl">📋 Réserver sur Vélo'v</a>` : '';
