@@ -252,6 +252,25 @@
     .fp-act-map{background:var(--orange-light);color:var(--orange-dark);border-color:var(--orange-border)}
     @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes lpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+    /* ── FICHE BORNE ── */
+    .fp-borne-row{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer;border-radius:8px;transition:background .15s;margin:0 -4px;padding-left:4px;padding-right:4px}
+    .fp-borne-row:last-child{border-bottom:none}
+    .fp-borne-row:active{background:var(--orange-light)}
+    .fp-borne-row-arrow{font-size:12px;color:var(--orange);margin-left:auto;flex-shrink:0}
+    /* fiche détail borne */
+    .sec-borne-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+    .sec-borne-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .sec-borne-title{font-size:16px;font-weight:900;line-height:1.1;flex:1}
+    .sec-borne-op{font-size:10px;color:var(--muted);font-weight:600;margin-bottom:10px}
+    .sec-borne-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+    .sec-borne-cell{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 10px}
+    .sec-borne-lbl{font-size:8px;color:var(--muted);font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+    .sec-borne-val{font-size:14px;font-weight:900;color:var(--text)}
+    .sec-borne-dispo{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;border-radius:12px;background:var(--orange);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;text-decoration:none;cursor:pointer;border:none;width:100%;margin-bottom:8px}
+    .sec-borne-nav{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;background:var(--orange-light);color:var(--orange-dark);border:1.5px solid var(--orange-border);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer;width:100%;margin-bottom:8px}
+    .borne-prise-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+    .borne-prise-tag{font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;background:#E3F2FD;color:#1565C0}
   </style>
 </head>
 <body>
@@ -500,6 +519,37 @@
           <div class="info-cell"><div class="info-lbl">Autonomie</div><div class="info-val" id="ap-range">—</div></div>
           <div class="info-cell"><div class="info-lbl">Service</div><div class="info-val" id="ap-service">—</div></div>
         </div>
+      </div>
+
+      <!-- FICHE BORNE -->
+      <div id="sec-borne" style="display:none">
+        <div class="sec-borne-header">
+          <button class="fp-back" onclick="closeBorne()">&#8592;</button>
+          <div class="sec-borne-icon" id="borne-icon">⚡</div>
+          <div class="sec-borne-title" id="borne-title">—</div>
+        </div>
+        <div class="sec-borne-op" id="borne-op">—</div>
+        <div class="sec-borne-grid">
+          <div class="sec-borne-cell">
+            <div class="sec-borne-lbl">Puissance max</div>
+            <div class="sec-borne-val" id="borne-kw">—</div>
+          </div>
+          <div class="sec-borne-cell">
+            <div class="sec-borne-lbl">Points de charge</div>
+            <div class="sec-borne-val" id="borne-pts">—</div>
+          </div>
+          <div class="sec-borne-cell" style="grid-column:1/-1">
+            <div class="sec-borne-lbl">Types de prise</div>
+            <div class="borne-prise-tags" id="borne-prises">—</div>
+          </div>
+        </div>
+        <button class="sec-borne-dispo" id="borne-dispo-btn" onclick="openBorneDispo()">
+          ⚡ Voir disponibilité en temps réel ↗
+        </button>
+        <a class="sec-borne-nav" id="borne-nav-btn" href="#" target="_blank" rel="noopener">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          S'y rendre
+        </a>
       </div>
 
       <!-- Footer uniquement pour autopartage -->
@@ -1060,11 +1110,86 @@ async function refreshDetail(){
   }
 }
 
+// ── FICHE BORNE ──
+let selectedBorne = null;
+
+function showBorne(idx){
+  if(!selected||selected.type!=='parking'||!selected.bornes) return;
+  const b = selected.bornes[idx];
+  if(!b) return;
+  selectedBorne = b;
+
+  // Masquer sec-parking, afficher sec-borne
+  document.getElementById('sec-parking').style.display='none';
+  document.getElementById('sec-borne').style.display='block';
+  document.getElementById('det-action-bar').style.display='none';
+
+  // Icône selon catégorie
+  const iconEl=document.getElementById('borne-icon');
+  iconEl.textContent='⚡';
+  iconEl.style.background=b.categorie==='rapide'?'#E8F5E9':b.categorie==='acceleree'?'#E3F2FD':'#FFF3E0';
+  iconEl.style.color=b.categorie==='rapide'?'#2E7D32':b.categorie==='acceleree'?'#1565C0':'#E65C00';
+
+  // Nom : nom de la borne ou ID station
+  document.getElementById('borne-title').textContent=b.nom||b.id||'Borne de recharge';
+  document.getElementById('borne-op').textContent=b.operateur||'—';
+
+  // Puissance
+  const kw=fixKw(b.puissance_max_kw);
+  document.getElementById('borne-kw').textContent=kw?kw+' kW':'—';
+
+  // Points
+  document.getElementById('borne-pts').textContent=b.nb_points||'—';
+
+  // Types de prise
+  const prisesEl=document.getElementById('borne-prises');
+  if(b.types_prise&&b.types_prise.trim()){
+    const prises=b.types_prise.split(/[,;/·]+/).map(s=>s.trim()).filter(Boolean);
+    prisesEl.innerHTML=prises.map(p=>`<span class="borne-prise-tag">${p}</span>`).join('');
+  } else {
+    prisesEl.innerHTML='<span style="font-size:11px;color:var(--muted)">Non renseigné</span>';
+  }
+
+  // Bouton navigation
+  const navBtn=document.getElementById('borne-nav-btn');
+  if(b.lat&&b.lng){
+    navBtn.href=`geo:${b.lat},${b.lng}?q=${encodeURIComponent(b.nom||'Borne recharge')}`;
+    navBtn.style.display='flex';
+  } else if(selected.lat&&selected.lng){
+    navBtn.href=`geo:${selected.lat},${selected.lng}?q=${encodeURIComponent(selected.nom)}`;
+    navBtn.style.display='flex';
+  } else {
+    navBtn.style.display='none';
+  }
+}
+
+function closeBorne(){
+  selectedBorne=null;
+  document.getElementById('sec-borne').style.display='none';
+  document.getElementById('sec-parking').style.display='block';
+  document.getElementById('det-action-bar').style.display='flex';
+}
+
+function openBorneDispo(){
+  if(!selectedBorne) return;
+  const op=(selectedBorne.operateur||'').toLowerCase();
+  let url;
+  if(op.includes('izivia'))          url='https://fronts-map.izivia.com/';
+  else if(op.includes('freshmile'))  url='https://map.freshmile.com/';
+  else if(op.includes('totalenerg')) url='https://www.totalenergies.fr/particuliers/electrique/recharge/carte-des-bornes';
+  else if(op.includes('electra'))    url='https://www.electra.site/map';
+  else if(op.includes('ionity'))     url='https://ionity.eu/fr/chargeur/carte';
+  else if(op.includes('charge unix') || op.includes('chargeunix')) url='https://charge-unix.fr/map';
+  else                               url='https://www.chargemap.com/map';
+  window.open(url,'_blank','noopener');
+}
+
 function updateDetail(p){
   const type=p.type;
   document.getElementById('sec-parking').style.display=type==='parking'?'block':'none';
   document.getElementById('sec-velov').style.display=type==='velov'?'block':'none';
   document.getElementById('sec-auto').style.display=(type==='citiz'||type==='leo')?'block':'none';
+  document.getElementById('sec-borne').style.display='none'; // toujours masqué au rechargement
   const autoFooter=document.getElementById('det-footer-auto');
   if(autoFooter) autoFooter.style.display=(type==='citiz'||type==='leo')?'flex':'none';
   let ic,cc;
@@ -1191,23 +1316,19 @@ function updateDetail(p){
       document.getElementById('fp-citiz-sub').textContent='véhicule disponible';
       document.getElementById('fp-citiz-detail').textContent='';
     }
-    // ── Bornes IRVE regroupées par opérateur ──
+    // ── Bornes IRVE regroupées par opérateur — cliquables ──
     const bornesBl=document.getElementById('fp-bornes-bloc');
     if(p.bornes?.length){
       bornesBl.style.display='block';
-      // Regrouper par opérateur
-      const opMap={};
-      p.bornes.forEach(b=>{
-        const op=b.operateur||'—';
-        if(!opMap[op]) opMap[op]=[];
-        opMap[op].push(b);
-      });
-      document.getElementById('fp-bornes-content').innerHTML=Object.entries(opMap).map(([op,bs])=>{
-        const tags=bs.map(b=>{
-          const cls=b.categorie==='rapide'?'fp-tag-r':b.categorie==='acceleree'?'fp-tag-a':'fp-tag-n';
-          return `<span class="fp-borne-tag ${cls}">${fixKw(b.puissance_max_kw)||'?'} kW · ${b.nb_points} pts</span>`;
-        }).join('');
-        return `<div class="fp-borne-row"><span class="fp-borne-op">${op}</span>${tags}</div>`;
+      document.getElementById('fp-bornes-content').innerHTML=p.bornes.map((b,i)=>{
+        const kw=fixKw(b.puissance_max_kw);
+        const cls=b.categorie==='rapide'?'fp-tag-r':b.categorie==='acceleree'?'fp-tag-a':'fp-tag-n';
+        return `<div class="fp-borne-row" onclick="showBorne(${i})">
+          <span class="fp-borne-op">${b.operateur||'—'}</span>
+          <span class="fp-borne-tag ${cls}">${kw||'?'} kW</span>
+          <span style="font-size:9px;color:var(--muted);font-weight:600">${b.nb_points} pt${b.nb_points>1?'s':''}</span>
+          <span class="fp-borne-row-arrow">›</span>
+        </div>`;
       }).join('');
     } else bornesBl.style.display='none';
     // ── Horaires ──
