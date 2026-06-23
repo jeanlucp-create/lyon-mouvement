@@ -274,7 +274,26 @@
     .lp-btn-nav{background:var(--orange);color:white}
     .lp-btn-tcl{background:var(--orange-light);color:var(--orange-dark);border:1px solid var(--orange-border)}
 
-    /* Disque borne de recharge */
+    /* Header orange quand déplié (parking ET vélo'v) */
+    .pk-card:has(.pk-expanded.open) .pk-row {
+      background: var(--orange-light);
+      border-bottom: 1px solid var(--orange-border);
+    }
+    .pk-card:has(.pk-expanded.open) .pk-name-txt { color: var(--orange-dark); }
+    .pk-card:has(.pk-expanded.open) .pk-chevron  { color: var(--orange-dark); }
+
+    /* Sections déplié — Vélo'v fond bleu pâle, Bornes fond vert très pâle */
+    .exp-section-vv  { background:#F0F7FF; border-radius:10px; padding:10px; margin-bottom:8px; border:1px solid #C5DDF4; }
+    .exp-section-ve  { background:#F0FBF3; border-radius:10px; padding:10px; margin-bottom:8px; border:1px solid #A8DFB2; }
+    .exp-section-lbl { font-size:9px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; display:flex; align-items:center; gap:5px; }
+
+    /* Groupe opérateur bornes */
+    .op-group        { margin-bottom:8px; }
+    .op-group:last-child { margin-bottom:0; }
+    .op-group-header { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+    .op-group-name   { font-size:11px; font-weight:800; color:var(--text); flex:1; }
+    .op-prise-row    { display:flex; align-items:center; gap:5px; margin-bottom:3px; flex-wrap:wrap; padding-left:2px; }
+    .op-prise-row:last-child { margin-bottom:0; }
     .borne-disc{width:22px;height:22px;border-radius:50%;background:#1B5E20;display:flex;align-items:center;justify-content:center;font-size:12px;color:white;flex-shrink:0}
     .borne-disc-lg{width:28px;height:28px;border-radius:50%;background:#1B5E20;display:flex;align-items:center;justify-content:center;font-size:15px;color:white;flex-shrink:0}
   </style>
@@ -752,15 +771,15 @@ function pkExpandedHTML(p, s, cap, nb) {
   const barColor = s.c === 'green' ? 'var(--green)' : s.c === 'amber' ? 'var(--amber)' : 'var(--red)';
   let html = '';
 
-  // Barre occupation
+  // ── Barre occupation ──
   html += `<div class="exp-lbl" style="margin-bottom:4px">Occupation</div>
     <div class="occ-bar"><div class="occ-fill" style="width:${occ}%;background:${barColor}"></div></div>
     <div class="occ-meta"><span style="color:${barColor}">${nb !== null && nb >= 0 ? nb + ' libres' : '—'}</span><span>${cap || '?'} places</span></div>`;
 
-  // Tarifs (LPA/opérateurs)
+  // ── Tarifs (LPA) ──
   if (p.gestionnaire !== 'TCL' && (p.tarif_1h || p.tarif_2h || p.tarif_4h || p.tarif_24h)) {
-    html += `<div class="exp-lbl">Tarifs</div>
-      <div class="tarifs-grid">
+    html += `<div class="exp-lbl" style="margin-top:8px">Tarifs</div>
+      <div class="tarifs-grid" style="margin-bottom:10px">
         <div class="tarif-cell"><div class="tarif-lbl">1h</div><div class="tarif-val">${p.tarif_1h ? p.tarif_1h + '€' : '—'}</div></div>
         <div class="tarif-cell"><div class="tarif-lbl">2h</div><div class="tarif-val">${p.tarif_2h ? p.tarif_2h + '€' : '—'}</div></div>
         <div class="tarif-cell"><div class="tarif-lbl">4h</div><div class="tarif-val">${p.tarif_4h ? p.tarif_4h + '€' : '—'}</div></div>
@@ -768,68 +787,78 @@ function pkExpandedHTML(p, s, cap, nb) {
       </div>`;
   }
 
-  // Vélo'v
-  html += `<div class="exp-lbl">🚲 Vélo'v le plus proche</div>`;
-  const vvP = (p.velov_proches || [])[0];
-  if (vvP) {
-    const mecaBadge = vvP.velos_meca > 0 ? `<span class="badge bm">⚙ ${vvP.velos_meca}</span>` : '';
-    const elecBadge = vvP.velos_elec > 0 ? `<span class="badge be">⚡ ${vvP.velos_elec}</span>` : '';
-    const hasVelos = vvP.velos_dispo > 0;
-    const icoBg = hasVelos ? 'var(--orange)' : 'var(--muted)';
-    const vvUrl = `https://velov.grandlyon.com/#/map?lat=${vvP.lat}&lng=${vvP.lng}&zoom=17`;
-    const distTxt = vvP._dist ? fmtDist(vvP._dist) : '';
-    html += `<div class="vv-acc-bloc" style="margin-bottom:10px">
-      <div class="vv-acc-row">
-        <div class="vv-acc-ico ${hasVelos ? '' : 'empty'}" style="background:${icoBg}">V'</div>
-        <div class="vv-acc-info">
-          <div class="vv-acc-dispo ${hasVelos ? '' : 'c-gray'}">${vvP.velos_dispo} vélo${vvP.velos_dispo !== 1 ? 's' : ''}</div>
-          <div class="vv-acc-station">${vvP.nom}${distTxt ? ' · ' + distTxt : ''}</div>
-          <div class="vv-acc-badges">${mecaBadge}${elecBadge}${!hasVelos ? '<span class="badge" style="background:rgba(255,59,48,.1);color:var(--red)">Vide</span>' : ''}</div>
-        </div>
-        <button class="vv-acc-btn ${hasVelos ? '' : 'empty'}" onclick="window.open('${vvUrl}','_blank')" style="background:${icoBg}">Réserver →</button>
-      </div>
-    </div>`;
-  } else {
-    html += `<div class="vv-acc-bloc" style="margin-bottom:10px"><div class="empty-txt">Pas de station Vélo'v dans un rayon de 500m</div></div>`;
-  }
-
-  // Bornes par opérateur
-  html += `<div class="exp-lbl" style="display:flex;align-items:center;gap:5px"><div class="borne-disc" style="width:16px;height:16px;font-size:9px">⚡</div> Bornes de recharge</div>`;
-  const bornes = p.bornes || [];
-  if (bornes.length) {
-    html += `<div class="bornes-acc-wrap">`;
-    bornes.forEach(b => {
-      const kw = b.puissance_max_kw || 0;
-      const kwLbl = kw > 0 ? kw + ' kW' : '—';
-      const cat = b.categorie || 'normale';
-      const prises = (b.types_prise || '').split(',').map(s => s.trim()).filter(Boolean);
-      const priseTags = prises.map(pr => `<span class="prise-tag">${pr}</span>`).join('');
-      html += `<div class="op-bloc">
-        <div class="op-row">
-          <span class="op-nom">${b.operateur || '—'}</span>
-          <span class="op-kw ${kwClass(cat)}">${kwLbl}</span>
-          ${eclairs(cat)}
-          <span class="op-pts">${b.nb_points} pt${b.nb_points > 1 ? 's' : ''}</span>
-        </div>
-        <div class="prise-tags">${priseTags || '<span class="empty-txt">Type non renseigné</span>'}</div>
-      </div>`;
-    });
-    html += `</div>`;
-  } else {
-    html += `<div class="empty-txt">Pas de borne connue à proximité</div>`;
-  }
-
-  // Boutons actions
+  // ── Boutons actions (remontés juste après barre + tarifs) ──
   const navUrl = p.lat && p.lng ? `geo:${p.lat},${p.lng}?q=${encodeURIComponent(p.nom)}` : '#';
   const mapBtn = p.lat && p.lng
     ? `<button class="acc-act-btn acc-act-map" onclick="showParkingOnMap('${p.id}')">🗺 Carte</button>`
     : '';
-  html += `<div class="acc-act-row">
+  html += `<div class="acc-act-row" style="margin-bottom:10px">
     <a class="acc-act-btn acc-act-nav" href="${navUrl}" target="_blank" rel="noopener">📍 S'y rendre</a>
     <button class="acc-act-btn acc-act-tcl" onclick="openTCL(event)">🚇 TCL</button>
     <button class="acc-act-btn acc-act-copy" onclick="copyParkingAddress('${p.id}', this)">📋 Copier</button>
     ${mapBtn}
   </div>`;
+
+  // ── Vélo'v — section fond bleu pâle ──
+  const vvP = (p.velov_proches || [])[0];
+  html += `<div class="exp-section-vv">`;
+  html += `<div class="exp-section-lbl"><span style="width:16px;height:16px;border-radius:50%;background:var(--vv-bg);border:1.5px solid var(--vv-txt);display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:var(--vv-txt)">V'</span> Vélo'v le plus proche</div>`;
+  if (vvP) {
+    const mecaBadge = vvP.velos_meca > 0 ? `<span class="badge bm">⚙ ${vvP.velos_meca}</span>` : '';
+    const elecBadge = vvP.velos_elec > 0 ? `<span class="badge be">⚡ ${vvP.velos_elec}</span>` : '';
+    const hasVelos  = vvP.velos_dispo > 0;
+    const icoBg     = hasVelos ? 'var(--orange)' : 'var(--muted)';
+    const vvUrl     = `https://velov.grandlyon.com/#/map?lat=${vvP.lat}&lng=${vvP.lng}&zoom=17`;
+    const distTxt   = vvP._dist ? fmtDist(vvP._dist) : '';
+    html += `<div class="vv-acc-row">
+      <div class="vv-acc-ico ${hasVelos ? '' : 'empty'}" style="background:${icoBg}">V'</div>
+      <div class="vv-acc-info">
+        <div class="vv-acc-dispo ${hasVelos ? '' : 'c-gray'}">${vvP.velos_dispo} vélo${vvP.velos_dispo !== 1 ? 's' : ''}</div>
+        <div class="vv-acc-station">${vvP.nom}${distTxt ? ' · ' + distTxt : ''}</div>
+        <div class="vv-acc-badges">${mecaBadge}${elecBadge}${!hasVelos ? '<span class="badge" style="background:rgba(255,59,48,.1);color:var(--red)">Vide</span>' : ''}</div>
+      </div>
+      <button class="vv-acc-btn ${hasVelos ? '' : 'empty'}" onclick="window.open('${vvUrl}','_blank')" style="background:${icoBg}">Réserver →</button>
+    </div>`;
+  } else {
+    html += `<div class="empty-txt">Pas de station Vélo'v dans un rayon de 500m</div>`;
+  }
+  html += `</div>`;
+
+  // ── Bornes — section fond vert pâle — group by opérateur ──
+  const bornes = p.bornes || [];
+  html += `<div class="exp-section-ve">`;
+  html += `<div class="exp-section-lbl"><div class="borne-disc" style="width:16px;height:16px;font-size:9px">⚡</div> Bornes de recharge</div>`;
+  if (bornes.length) {
+    // Regrouper par opérateur
+    const byOp = {};
+    bornes.forEach(b => {
+      const op = (b.operateur || '—').trim();
+      if (!byOp[op]) byOp[op] = [];
+      byOp[op].push(b);
+    });
+    Object.entries(byOp).forEach(([op, blist]) => {
+      html += `<div class="op-group"><div class="op-group-header"><span class="op-group-name">${op}</span></div>`;
+      blist.forEach(b => {
+        const kw    = b.puissance_max_kw || 0;
+        const kwLbl = kw > 0 ? kw + ' kW' : '—';
+        const cat   = b.categorie || 'normale';
+        const prises = (b.types_prise || '').split(',').map(ss => ss.trim()).filter(Boolean);
+        const priseTags = prises.length
+          ? prises.map(pr => `<span class="prise-tag">${pr}</span>`).join('')
+          : '<span style="font-size:9px;color:var(--muted);font-style:italic">Type non renseigné</span>';
+        html += `<div class="op-prise-row">
+          <span class="op-kw ${kwClass(cat)}">${kwLbl}</span>
+          ${eclairs(cat)}
+          <span class="op-pts">${b.nb_points} pt${b.nb_points > 1 ? 's' : ''}</span>
+          ${priseTags}
+        </div>`;
+      });
+      html += `</div>`;
+    });
+  } else {
+    html += `<div class="empty-txt">Pas de borne connue à proximité</div>`;
+  }
+  html += `</div>`;
 
   return html;
 }
