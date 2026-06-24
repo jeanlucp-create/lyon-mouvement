@@ -636,7 +636,7 @@ function showToast(msg) {
 function ctxBtns(ctx, totalLabel) {
   const f = ctxFilters[ctx];
   return `<span class="sec-lbl-actions">
-    <button class="ctx-btn${f.fav?' on':''}" onclick="toggleCtxFilter('${ctx}','fav')">★</button>
+    <button class="ctx-btn${f.fav?' on':''}" onclick="toggleCtxFilter('${ctx}','fav')">Filtre ★</button>
     <button class="ctx-btn${f.dispo?' on':''}" onclick="toggleCtxFilter('${ctx}','dispo')">Dispo</button>
   </span>`;
 }
@@ -682,7 +682,12 @@ function renderList() {
     list = list.map(p => ({...p, _dist: haversine(userLat, userLng, p.lat, p.lng)}));
     list.sort((a, b) => (a._dist||99999) - (b._dist||99999));
   }
-  if (!list.length && sub !== 've') { el.innerHTML = '<div class="empty-msg">Aucun résultat</div>'; return; }
+  if (!list.length && sub !== 've') {
+    // Afficher quand même le titre avec les boutons pour pouvoir désactiver le filtre
+    const lbl = sub === 'pr' ? '🚇 P+R TCL' : sub === 'pk' ? '🅿 Autres parkings' : "🚲 Vélo'v";
+    el.innerHTML = `<div class="sec-lbl">${lbl}${ctxBtns(sub)}</div><div class="empty-msg">Aucun résultat — désactive le filtre ci-dessus</div>`;
+    return;
+  }
 
   let html = '';
 
