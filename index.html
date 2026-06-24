@@ -77,6 +77,9 @@
     /* ── LISTE ── */
     .sec-lbl{font-size:9px;color:var(--amber);font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:8px 2px 4px;display:flex;align-items:center;gap:5px}
     .sec-lbl-gray{color:var(--muted)}
+    .sec-lbl-actions{margin-left:auto;display:flex;gap:4px}
+    .ctx-btn{padding:3px 8px;border-radius:20px;border:1.5px solid var(--orange-border);background:var(--white);font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s}
+    .ctx-btn.on{background:#FFD4B0;border-color:var(--orange-border);color:var(--orange-dark)}
 
     /* ── PARKING ACCORDION ── */
     .parking-list{display:flex;flex-direction:column;gap:6px}
@@ -345,7 +348,6 @@
   </div>
   <div class="view-row">
     <button class="view-btn" id="map-btn" onclick="toggleMap()">🗺 Carte</button>
-    <button class="fav-btn" id="fav-btn" onclick="toggleFavFilter()">★ Favoris</button>
     <button class="fav-btn" id="near-btn" onclick="nearMe()">📍 Près de moi</button>
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
@@ -457,7 +459,7 @@ const WORKER = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev';
 let data = {parkings:{tcl:[],operateurs:[]},velov:[],bornes:[]};
 let sub = 'pr';
 let mapVisible = false, fromMap = false;
-let favOnly = false;
+let ctxFilters = { pr:{fav:false,dispo:false}, pk:{fav:false,dispo:false}, vv:{fav:false,dispo:false}, ve:{fav:false,dispo:false} };
 let favorites = JSON.parse(localStorage.getItem('mral_fav')||'[]');
 let selected = null, refTimer = null;
 let userLat = null, userLng = null, nearActive = false;
@@ -504,11 +506,11 @@ function fixKw(v) {
 
 function getStatus(nb, cap) {
   if (nb === null || nb === undefined || nb < 0) return {lbl:'Données indisponibles',c:'gray',pct:0};
-  if (nb === 0) return {lbl:'Complet',c:'red',pct:100};
-  const occ = cap ? Math.round((1 - nb/cap)*100) : 20;
-  if (nb <= 15) return {lbl:'Ouvert',c:'red',pct:occ};
-  if (nb <= 30) return {lbl:'Ouvert',c:'amber',pct:occ};
-  return {lbl:'Ouvert',c:'green',pct:occ};
+  if (nb === 0) return {lbl:'Complet',c:'red',pct:0};
+  const pct = cap > 0 ? Math.round((nb / cap) * 100) : 50;
+  if (nb <= 15) return {lbl:'Ouvert',c:'red',pct};
+  if (nb <= 30) return {lbl:'Ouvert',c:'amber',pct};
+  return {lbl:'Ouvert',c:'green',pct};
 }
 
 function colHex(c) {
@@ -589,9 +591,8 @@ function toggleMap() {
   }
 }
 
-function toggleFavFilter() {
-  favOnly = !favOnly;
-  document.getElementById('fav-btn').classList.toggle('on', favOnly);
+function toggleCtxFilter(ctx, type) {
+  ctxFilters[ctx][type] = !ctxFilters[ctx][type];
   renderList();
 }
 
@@ -632,6 +633,14 @@ function showToast(msg) {
 }
 
 // ── RENDU LISTE ──
+function ctxBtns(ctx, totalLabel) {
+  const f = ctxFilters[ctx];
+  return `<span class="sec-lbl-actions">
+    <button class="ctx-btn${f.fav?' on':''}" onclick="toggleCtxFilter('${ctx}','fav')">★</button>
+    <button class="ctx-btn${f.dispo?' on':''}" onclick="toggleCtxFilter('${ctx}','dispo')">Dispo</button>
+  </span>`;
+}
+
 function renderList() {
   const q = document.getElementById('search').value.toLowerCase().trim();
   const el = document.getElementById('item-list');
@@ -660,7 +669,15 @@ function renderList() {
   else if (sub === 've') list = data.bornes || [];
 
   if (q) list = list.filter(p => (p.nom||'').toLowerCase().includes(q) || (p.adresse||'').toLowerCase().includes(q));
-  if (favOnly && (sub === 'pr' || sub === 'pk' || sub === 'vv')) list = list.filter(p => isFav(p.id));
+
+  // Filtres contextuels indépendants par onglet
+  const cf = ctxFilters[sub] || {};
+  if (cf.fav && (sub === 'pr' || sub === 'pk' || sub === 'vv')) list = list.filter(p => isFav(p.id));
+  if (cf.dispo) {
+    if (sub === 'pr' || sub === 'pk') list = list.filter(p => (p.places_disponibles||0) > 0);
+    else if (sub === 'vv') list = list.filter(v => (v.velos_dispo||0) > 0);
+  }
+
   if (nearActive && userLat !== null) {
     list = list.map(p => ({...p, _dist: haversine(userLat, userLng, p.lat, p.lng)}));
     list.sort((a, b) => (a._dist||99999) - (b._dist||99999));
@@ -670,30 +687,31 @@ function renderList() {
   let html = '';
 
   if (sub === 'pr' || sub === 'pk') {
-    const favs = list.filter(p => isFav(p.id));
-    const rest = list.filter(p => !isFav(p.id));
+    const cf = ctxFilters[sub];
+    const favs = cf.fav ? [] : list.filter(p => isFav(p.id));
+    const rest = cf.fav ? list : list.filter(p => !isFav(p.id));
     const lbl = sub === 'pr' ? '🚇 P+R TCL' : '🅿 Autres parkings';
-    const open = list.filter(p => p.places_disponibles > 0).length;
+    const open = (data.parkings?.[sub==='pr'?'tcl':'operateurs']||[]).filter(p => (p.places_disponibles||0) > 0).length;
     if (favs.length) {
-      html += `<div class="sec-lbl">★ Favoris</div><div class="parking-list">`;
+      html += `<div class="sec-lbl">★ Favoris${ctxBtns(sub)}</div><div class="parking-list">`;
       favs.forEach(p => html += pkHTML(p));
       html += `</div>`;
     }
-    if (rest.length) {
-      html += `<div class="sec-lbl${favs.length ? ' sec-lbl-gray' : ''}">${lbl} · ${open} ouverts</div><div class="parking-list">`;
-      rest.forEach(p => html += pkHTML(p));
-      html += `</div>`;
-    }
+    html += `<div class="sec-lbl${favs.length ? ' sec-lbl-gray' : ''}">${lbl} · ${open} ouverts${favs.length ? '' : ctxBtns(sub)}</div><div class="parking-list">`;
+    rest.forEach(p => html += pkHTML(p));
+    html += `</div>`;
   } else if (sub === 'vv') {
-    const open = list.filter(v => v.velos_dispo > 0).length;
-    const favs = list.filter(v => isFav(v.id));
-    const rest = list.filter(v => !isFav(v.id));
+    const cf = ctxFilters['vv'];
+    const allVv = (data.velov||[]).filter(v => v.nom && v.nom.trim() !== '');
+    const open = allVv.filter(v => v.velos_dispo > 0).length;
+    const favs = cf.fav ? [] : list.filter(v => isFav(v.id));
+    const rest = cf.fav ? list : list.filter(v => !isFav(v.id));
     if (favs.length) {
-      html += `<div class="sec-lbl">★ Favoris</div><div class="parking-list">`;
+      html += `<div class="sec-lbl">★ Favoris${ctxBtns('vv')}</div><div class="parking-list">`;
       favs.forEach(v => html += vvHTML(v));
       html += `</div>`;
     }
-    html += `<div class="sec-lbl${favs.length ? ' sec-lbl-gray' : ''}">🚲 Vélo'v · ${open} stations avec vélos</div><div class="parking-list">`;
+    html += `<div class="sec-lbl${favs.length ? ' sec-lbl-gray' : ''}">🚲 Vélo'v · ${open} stations avec vélos${favs.length ? '' : ctxBtns('vv')}</div><div class="parking-list">`;
     rest.forEach(v => html += vvHTML(v));
     html += `</div>`;
   } else if (sub === 've') {
@@ -772,7 +790,7 @@ function pkExpandedHTML(p, s, cap, nb) {
   let html = '';
 
   // ── Barre occupation ──
-  html += `<div class="exp-lbl" style="margin-bottom:4px">Occupation</div>
+  html += `<div class="exp-lbl" style="margin-bottom:4px">Disponibilité</div>
     <div class="occ-bar"><div class="occ-fill" style="width:${occ}%;background:${barColor}"></div></div>
     <div class="occ-meta"><span style="color:${barColor}">${nb !== null && nb >= 0 ? nb + ' libres' : '—'}</span><span>${cap || '?'} places</span></div>`;
 
@@ -817,7 +835,7 @@ function pkExpandedHTML(p, s, cap, nb) {
         <div class="vv-acc-station">${vvP.nom}${distTxt ? ' · ' + distTxt : ''}</div>
         <div class="vv-acc-badges">${mecaBadge}${elecBadge}${!hasVelos ? '<span class="badge" style="background:rgba(255,59,48,.1);color:var(--red)">Vide</span>' : ''}</div>
       </div>
-      <button class="vv-acc-btn ${hasVelos ? '' : 'empty'}" onclick="window.open('${vvUrl}','_blank')" style="background:${icoBg}">Réserver →</button>
+      <button class="vv-acc-btn ${hasVelos ? '' : 'empty'}" data-nom="${(vvP.nom||'').replace(/"/g,'&quot;')}" data-adr="${(vvP.adresse||vvP.nom||'').replace(/"/g,'&quot;')}" onclick="copyAndReserveVelovInline(this);window.open('${vvUrl}','_blank')" style="background:${icoBg}">Réserver →</button>
     </div>`;
   } else {
     html += `<div class="empty-txt">Pas de station Vélo'v dans un rayon de 500m</div>`;
