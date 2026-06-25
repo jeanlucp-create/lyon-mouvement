@@ -517,11 +517,11 @@ function colHex(c) {
   return {green:'#2ECC71',amber:'#FF9500',red:'#FF3B30',gray:'#AAA'}[c] || '#AAA';
 }
 
-// Éclairs selon catégorie borne
+// Éclairs selon catégorie borne (1/2/3 selon puissance)
 function eclairs(cat) {
   if (cat === 'rapide')    return `<span class="ec" style="color:#2E7D32">⚡</span><span class="ec" style="color:#2E7D32">⚡</span><span class="ec" style="color:#2E7D32">⚡</span>`;
-  if (cat === 'acceleree') return `<span class="ec" style="color:#1565C0">⚡</span><span class="ec" style="color:#1565C0">⚡</span><span class="ec" style="color:var(--border)">⚡</span>`;
-  if (cat === 'normale')   return `<span class="ec" style="color:#E65C00">⚡</span><span class="ec" style="color:var(--border)">⚡</span><span class="ec" style="color:var(--border)">⚡</span>`;
+  if (cat === 'acceleree') return `<span class="ec" style="color:#1565C0">⚡</span><span class="ec" style="color:#1565C0">⚡</span><span class="ec" style="color:#DDD">⚡</span>`;
+  if (cat === 'normale')   return `<span class="ec" style="color:#E65C00">⚡</span><span class="ec" style="color:#DDD">⚡</span><span class="ec" style="color:#DDD">⚡</span>`;
   return '';
 }
 
@@ -847,31 +847,61 @@ function pkExpandedHTML(p, s, cap, nb) {
   }
   html += `</div>`;
 
-  // ── Bornes — section fond vert pâle — group by opérateur ──
+  // ── Bornes — section fond vert pâle — group by lieu+opérateur+accès ──
   const bornes = p.bornes || [];
   html += `<div class="exp-section-ve">`;
   html += `<div class="exp-section-lbl"><div class="borne-disc" style="width:16px;height:16px;font-size:9px">⚡</div> Bornes de recharge</div>`;
   if (bornes.length) {
-    // Regrouper par opérateur
-    const byOp = {};
+    // Extraire le nom de lieu (supprimer le code interne type BRN06, LY316...)
+    function cleanLieu(nom) {
+      return (nom || '').replace(/^[A-Z]{2,5}\d{2,3}\s*-\s*/i, '').trim();
+    }
+    // Clé de regroupement : lieu nettoyé + opérateur + condition_acces
+    // Dédupliquer également par coordonnées proches (< 80m) + même opérateur
+    const groups = [];
+    const groupMap = {};
     bornes.forEach(b => {
-      const op = (b.operateur || '—').trim();
-      if (!byOp[op]) byOp[op] = [];
-      byOp[op].push(b);
+      const lieu = cleanLieu(b.nom).split(' - ')[0].trim(); // garder uniquement la première partie = le lieu
+      const op   = (b.operateur || '—').trim();
+      const acc  = (b.condition_acces || '').trim();
+      const key  = `${lieu}||${op}||${acc}`;
+      if (!groupMap[key]) {
+        const g = { lieu, op, acc, lat: b.lat, lng: b.lng, stations: [] };
+        groupMap[key] = g;
+        groups.push(g);
+      }
+      // sous-nom = ce qui suit le premier " - " après le code (ex: "Charge ultra-rapide")
+      const cleaned = cleanLieu(b.nom);
+      const dashIdx = cleaned.indexOf(' - ');
+      const sousNom = dashIdx >= 0 ? cleaned.slice(dashIdx + 3).trim() : null;
+      groupMap[key].stations.push({ ...b, sousNom });
     });
-    Object.entries(byOp).forEach(([op, blist]) => {
-      html += `<div class="op-group"><div class="op-group-header"><span class="op-group-name">${op}</span></div>`;
-      blist.forEach(b => {
+
+    groups.forEach(g => {
+      const navUrl = g.lat && g.lng
+        ? `https://www.google.com/maps/dir/?api=1&destination=${g.lat},${g.lng}`
+        : '#';
+      const accBadge = g.acc && g.acc !== 'Accès libre'
+        ? `<span style="font-size:8px;color:var(--muted);font-weight:700"> · ${g.acc}</span>` : '';
+      html += `<div class="op-group">
+        <div class="op-group-header" style="justify-content:space-between">
+          <div style="flex:1;min-width:0">
+            <span class="op-group-name">${g.lieu}</span>
+            <span style="font-size:9px;color:var(--muted);font-weight:600"> · ${g.op}</span>${accBadge}
+          </div>
+          <a href="${navUrl}" target="_blank" rel="noopener" style="flex-shrink:0;padding:4px 10px;border-radius:20px;background:var(--orange);color:white;font-size:9px;font-weight:800;text-decoration:none;white-space:nowrap;margin-left:6px">🗺 Y aller</a>
+        </div>`;
+      g.stations.forEach(b => {
         const kw    = b.puissance_max_kw || 0;
         const kwLbl = kw > 0 ? kw + ' kW' : '—';
         const cat   = b.categorie || 'normale';
         const prises = (b.types_prise || '').split(',').map(ss => ss.trim()).filter(Boolean);
         const priseTags = prises.length
           ? prises.map(pr => `<span class="prise-tag">${pr}</span>`).join('')
-          : '<span style="font-size:9px;color:var(--muted);font-style:italic">Type non renseigné</span>';
+          : '';
         html += `<div class="op-prise-row">
-          <span class="op-kw ${kwClass(cat)}">${kwLbl}</span>
           ${eclairs(cat)}
+          <span class="op-kw ${kwClass(cat)}">${kwLbl}</span>
           <span class="op-pts">${b.nb_points} pt${b.nb_points > 1 ? 's' : ''}</span>
           ${priseTags}
         </div>`;
