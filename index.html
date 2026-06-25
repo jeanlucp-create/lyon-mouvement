@@ -847,67 +847,116 @@ function pkExpandedHTML(p, s, cap, nb) {
   }
   html += `</div>`;
 
-  // ── Bornes — section fond vert pâle — group by lieu+opérateur+accès ──
+  // ── Bornes — section fond vert pâle ──
   const bornes = p.bornes || [];
   html += `<div class="exp-section-ve">`;
   html += `<div class="exp-section-lbl"><div class="borne-disc" style="width:16px;height:16px;font-size:9px">⚡</div> Bornes de recharge</div>`;
   if (bornes.length) {
-    // Extraire le nom de lieu (supprimer le code interne type BRN06, LY316...)
-    function cleanLieu(nom) {
-      return (nom || '').replace(/^[A-Z]{2,5}\d{2,3}\s*-\s*/i, '').trim();
-    }
-    // Clé de regroupement : lieu nettoyé + opérateur + condition_acces
-    // Dédupliquer également par coordonnées proches (< 80m) + même opérateur
-    const groups = [];
-    const groupMap = {};
-    bornes.forEach(b => {
-      const lieu = cleanLieu(b.nom).split(' - ')[0].trim(); // garder uniquement la première partie = le lieu
-      const op   = (b.operateur || '—').trim();
-      const acc  = (b.condition_acces || '').trim();
-      const key  = `${lieu}||${op}||${acc}`;
-      if (!groupMap[key]) {
-        const g = { lieu, op, acc, lat: b.lat, lng: b.lng, stations: [] };
-        groupMap[key] = g;
-        groups.push(g);
-      }
-      // sous-nom = ce qui suit le premier " - " après le code (ex: "Charge ultra-rapide")
-      const cleaned = cleanLieu(b.nom);
-      const dashIdx = cleaned.indexOf(' - ');
-      const sousNom = dashIdx >= 0 ? cleaned.slice(dashIdx + 3).trim() : null;
-      groupMap[key].stations.push({ ...b, sousNom });
-    });
 
-    groups.forEach(g => {
-      const navUrl = g.lat && g.lng
-        ? `https://www.google.com/maps/dir/?api=1&destination=${g.lat},${g.lng}`
-        : '#';
-      const accBadge = g.acc && g.acc !== 'Accès libre'
-        ? `<span style="font-size:8px;color:var(--muted);font-weight:700"> · ${g.acc}</span>` : '';
-      html += `<div class="op-group">
-        <div class="op-group-header" style="justify-content:space-between">
-          <div style="flex:1;min-width:0">
-            <span class="op-group-name">${g.lieu}</span>
-            <span style="font-size:9px;color:var(--muted);font-weight:600"> · ${g.op}</span>${accBadge}
-          </div>
-          <a href="${navUrl}" target="_blank" rel="noopener" style="flex-shrink:0;padding:4px 10px;border-radius:20px;background:var(--orange);color:white;font-size:9px;font-weight:800;text-decoration:none;white-space:nowrap;margin-left:6px">🗺 Y aller</a>
-        </div>`;
-      g.stations.forEach(b => {
-        const kw    = b.puissance_max_kw || 0;
-        const kwLbl = kw > 0 ? kw + ' kW' : '—';
-        const cat   = b.categorie || 'normale';
-        const prises = (b.types_prise || '').split(',').map(ss => ss.trim()).filter(Boolean);
-        const priseTags = prises.length
-          ? prises.map(pr => `<span class="prise-tag">${pr}</span>`).join('')
-          : '';
-        html += `<div class="op-prise-row">
-          ${eclairs(cat)}
-          <span class="op-kw ${kwClass(cat)}">${kwLbl}</span>
-          <span class="op-pts">${b.nb_points} pt${b.nb_points > 1 ? 's' : ''}</span>
-          ${priseTags}
-        </div>`;
+    // Nettoyer le nom : supprimer codes internes (BRN06, LY316, WAAT/s617830, ChargeGuru/uuid...)
+    function cleanLieu(nom) {
+      return (nom || '')
+        .replace(/^[A-Z]{2,5}\d{2,4}\s*-\s*/i, '')   // codes IZIVIA: BRN06, LY316...
+        .replace(/^[A-Z]+\/[a-z0-9\-]+$/i, '')        // codes slash: WAAT/s617830, ChargeGuru/uuid
+        .replace(/^[A-Z]+\/[a-z0-9\-]+\s+-\s+/i, '')  // WAAT/s617830 - NomStation
+        .trim();
+    }
+
+    // Normaliser le nom du parking pour la comparaison
+    function normStr(s) {
+      return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim();
+    }
+
+    // Déterminer si une borne est "dans" le parking (nom ou distance < 100m)
+    const pkNormWords = normStr(p.nom).split(' ').filter(w => w.length > 3);
+    function isInParking(b) {
+      // Critère 1 : distance < 100m
+      if (p.lat && p.lng && b.lat && b.lng) {
+        const dist = haversine(p.lat, p.lng, b.lat, b.lng);
+        if (dist < 100) return true;
+      }
+      // Critère 2 : nom de la borne contient des mots clés du parking
+      const bNorm = normStr(b.nom);
+      return pkNormWords.some(w => bNorm.includes(w));
+    }
+
+    // Regrouper par lieu+opérateur+accès
+    function buildGroups(bList) {
+      const groups = [];
+      const groupMap = {};
+      bList.forEach(b => {
+        let cleaned = cleanLieu(b.nom);
+        // Si cleanLieu a tout effacé (nom était un code pur), utiliser l'enseigne ou l'opérateur
+        if (!cleaned) cleaned = b.enseigne || b.operateur || b.nom || '—';
+        const lieu = cleaned.split(' - ')[0].trim();
+        const op   = (b.operateur || '—').trim();
+        const acc  = (b.condition_acces || '').trim();
+        const key  = `${lieu}||${op}||${acc}`;
+        if (!groupMap[key]) {
+          const g = { lieu, op, acc, lat: b.lat, lng: b.lng, dist: b._dist, stations: [] };
+          groupMap[key] = g;
+          groups.push(g);
+        }
+        groupMap[key].stations.push(b);
       });
-      html += `</div>`;
-    });
+      return groups;
+    }
+
+    function renderGroups(groups, showDist) {
+      let h = '';
+      groups.forEach(g => {
+        const navUrl = g.lat && g.lng
+          ? `https://www.google.com/maps/dir/?api=1&destination=${g.lat},${g.lng}` : '#';
+        const accBadge = g.acc && g.acc !== 'Accès libre'
+          ? `<span style="font-size:8px;color:var(--muted);font-weight:700"> · ${g.acc}</span>` : '';
+        const distBadge = showDist && g.dist != null
+          ? `<span style="font-size:8px;color:var(--muted);font-weight:600"> · ${fmtDist(g.dist)}</span>` : '';
+        h += `<div class="op-group">
+          <div class="op-group-header" style="justify-content:space-between">
+            <div style="flex:1;min-width:0;overflow:hidden">
+              <span class="op-group-name">${g.lieu}</span>
+              <span style="font-size:9px;color:var(--muted);font-weight:600"> · ${g.op}</span>${accBadge}${distBadge}
+            </div>
+            <a href="${navUrl}" target="_blank" rel="noopener" style="flex-shrink:0;padding:4px 10px;border-radius:20px;background:var(--orange);color:white;font-size:9px;font-weight:800;text-decoration:none;white-space:nowrap;margin-left:6px">🗺 Y aller</a>
+          </div>`;
+        g.stations.forEach(b => {
+          const kw  = b.puissance_max_kw || 0;
+          const kwLbl = kw > 0 ? kw + ' kW' : '—';
+          const cat = b.categorie || 'normale';
+          const prises = (b.types_prise || '').split(',').map(ss => ss.trim()).filter(Boolean);
+          const priseTags = prises.map(pr => `<span class="prise-tag">${pr}</span>`).join('');
+          h += `<div class="op-prise-row">
+            ${eclairs(cat)}
+            <span class="op-kw ${kwClass(cat)}">${kwLbl}</span>
+            <span class="op-pts">${b.nb_points} pt${b.nb_points > 1 ? 's' : ''}</span>
+            ${priseTags}
+          </div>`;
+        });
+        h += `</div>`;
+      });
+      return h;
+    }
+
+    // Calculer la distance de chaque borne par rapport au parking
+    const bornesWithDist = bornes.map(b => ({
+      ...b,
+      _dist: (p.lat && p.lng && b.lat && b.lng) ? haversine(p.lat, p.lng, b.lat, b.lng) : null
+    }));
+
+    const bornesDuParking  = bornesWithDist.filter(b => isInParking(b));
+    const bornesProximite  = bornesWithDist.filter(b => !isInParking(b));
+
+    if (bornesDuParking.length) {
+      html += renderGroups(buildGroups(bornesDuParking), false);
+    }
+    if (bornesProximite.length) {
+      html += `<div style="font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 0 4px;padding-top:6px;border-top:1px solid var(--border)">Autres bornes à proximité</div>`;
+      html += renderGroups(buildGroups(bornesProximite), true);
+    }
+    if (!bornesDuParking.length && !bornesProximite.length) {
+      html += `<div class="empty-txt">Pas de borne connue à proximité</div>`;
+    }
+
   } else {
     html += `<div class="empty-txt">Pas de borne connue à proximité</div>`;
   }
