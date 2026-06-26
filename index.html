@@ -387,9 +387,9 @@
     </div>
   </div>
   <div class="zone1-row" id="zone1">
+    <button class="fbtn map-fbtn" id="map-btn" onclick="toggleMap()">🗺 Carte</button>
     <button class="fbtn" id="near-btn" onclick="nearMe()">📍 Près de moi</button>
     <button class="fbtn" id="dist-btn" onclick="toggleDist()">&lt;200m</button>
-    <button class="fbtn map-fbtn" id="map-btn" onclick="toggleMap()">🗺 Carte</button>
     <button class="fbtn search-fbtn" id="search-btn" onclick="toggleSearch()" aria-label="Rechercher">🔍</button>
   </div>
   <div class="zone1-search" id="zone1-search" style="display:none">
@@ -1595,22 +1595,44 @@ function initMap() {
 
 function renderMap() {
   markers.forEach(m => map.removeLayer(m)); markers = [];
+
+  // Filtre distance commun
+  const inDist = (lat, lng) => {
+    if (!distActive || userLat === null) return true;
+    return haversine(userLat, userLng, lat, lng) <= distVal;
+  };
+  // Filtre dispo et favoris communs
+  const cf = ctxFilters[sub] || {};
+
   if (mapLayers.pr) (data.parkings?.tcl||[]).forEach(p => {
     if (!p.lat || !p.lng) return;
+    if (!inDist(p.lat, p.lng)) return;
+    if (cf.fav && !isFav(p.id)) return;
+    if (cf.dispo && (p.places_disponibles||0) <= 0) return;
     const nb = p.places_disponibles, cap = p.nb_places, s = getStatus(nb, cap), fav = isFav(p.id);
     addM(p.lat, p.lng, colHex(s.c), fav?34:26, (nb===null||nb<0)?'?':String(nb), p.nom, s.lbl, 'parking_tcl', '#2E7D32', 0, 0, p.id);
   });
   if (mapLayers.pk) (data.parkings?.operateurs||[]).forEach(p => {
     if (!p.lat || !p.lng) return;
+    if (!inDist(p.lat, p.lng)) return;
+    if (cf.fav && !isFav(p.id)) return;
+    if (cf.dispo && (p.places_disponibles||0) <= 0) return;
     const nb = p.places_disponibles, cap = p.nb_places, s = getStatus(nb, cap);
     addM(p.lat, p.lng, colHex(s.c), 24, String(nb===null||nb<0?'?':nb), p.nom, s.lbl, 'parking_op', '#9C2A5A', 0, 0, p.id);
   });
   if (mapLayers.vv) (data.velov||[]).filter(v => v.en_service && v.nom && v.nom.trim() !== '').forEach(v => {
     if (!v.lat || !v.lng) return;
+    if (!inDist(v.lat, v.lng)) return;
+    if (cf.fav && !isFav(v.id)) return;
+    if (cf.dispo && (v.velos_dispo||0) <= 0) return;
+    if (cf.elec && (v.velos_elec||0) <= 0) return;
     addM(v.lat, v.lng, v.velos_dispo>0?colHex('green'):colHex('gray'), 22, String(v.velos_dispo), '🚲 '+v.nom, v.velos_dispo+' vélos', 'velov', '#1565C0', v.velos_meca||0, v.velos_elec||0, v.id);
   });
   if (mapLayers.ve) (data.bornes||[]).forEach(b => {
     if (!b.lat || !b.lng) return;
+    if (!inDist(b.lat, b.lng)) return;
+    if (cf.libre && !(b.condition_acces||'').toLowerCase().includes('libre')) return;
+    if (cf.rapide && (b.puissance_max_kw||0) <= 50) return;
     const col = b.categorie==='rapide'?'#2E7D32':b.categorie==='acceleree'?'#1565C0':'#E65C00';
     const kw = b.puissance_max_kw || 0;
     addM(b.lat, b.lng, col, 22, kw > 0 ? kw+'k' : '⚡', b.nom, (b.operateur||'')+ ' · '+(b.nb_points||1)+' pt', 'borne', '#1A1A2E', 0, 0, null);
