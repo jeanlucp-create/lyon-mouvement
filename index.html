@@ -510,10 +510,9 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const WORKER      = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev/?mode=full';
-const WORKER_FAST = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev/?mode=fast';
+const WORKER = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev';
 let data = {parkings:{tcl:[],operateurs:[]},velov:[],bornes:[]};
-let dataReady = {parkings: false, velov: false, bornes: false, autopartage: false};
+let dataLoaded = false;
 let sub = 'pr';
 let mapVisible = false, fromMap = false;
 let ctxFilters = {
@@ -596,44 +595,23 @@ function kwClass(cat) {
 }
 
 // ── CHARGEMENT ──
-async function fetchWithRetry(url) {
-  let r, lastErr;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try { r = await fetch(url); if (r.ok) return r; lastErr = new Error('Erreur HTTP ' + r.status); }
-    catch(e) { lastErr = e; if (attempt < 2) await new Promise(res => setTimeout(res, 1200*(attempt+1))); }
-  }
-  throw lastErr || new Error('Impossible de joindre le serveur');
-}
-
 async function loadData() {
   document.getElementById('err-zone').innerHTML = '';
   try {
-    // ── ÉTAPE 1 : fast — parking + vélo'v ──
-    const rFast = await fetchWithRetry(WORKER_FAST);
-    const fast = await rFast.json();
-    data.parkings = fast.parkings || {tcl:[], operateurs:[]};
-    data.velov = fast.velov || [];
-    dataReady.parkings = true;
-    dataReady.velov = true;
+    let r, lastErr;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try { r = await fetch(WORKER); if (r.ok) break; lastErr = new Error('Erreur HTTP ' + r.status); }
+      catch(e) { lastErr = e; if (attempt < 2) await new Promise(res => setTimeout(res, 1200*(attempt+1))); }
+    }
+    if (!r || !r.ok) throw lastErr || new Error('Impossible de joindre le serveur');
+    const raw = await r.json();
+    data.parkings = raw.parkings || {tcl:[], operateurs:[]};
+    data.velov = raw.velov || [];
+    data.bornes = raw.bornes || [];
+    data.autopartage = raw.autopartage || {citiz:[], leoandgo:[]};
+    dataLoaded = true;
     renderList();
     if (map) renderMap();
-
-    // ── ÉTAPE 2 : full — toutes données en arrière-plan ──
-    try {
-      const rFull = await fetchWithRetry(WORKER);
-      const full = await rFull.json();
-      data.parkings = full.parkings || data.parkings;
-      data.velov = full.velov || data.velov;
-      data.bornes = full.bornes || [];
-      data.autopartage = full.autopartage || {citiz:[], leoandgo:[]};
-      dataReady.bornes = true;
-      dataReady.autopartage = true;
-      renderList();
-      if (map) renderMap();
-    } catch(e2) {
-      console.warn('Full load failed:', e2.message);
-    }
-
   } catch(e) {
     document.getElementById('err-zone').innerHTML =
       `<div class="error-msg">⚠️ ${e.message}</div>`;
@@ -1000,12 +978,7 @@ function setHtmlPreservingAccordions(el, html) {
 function renderList() {
   const q = document.getElementById('search').value.toLowerCase().trim();
   const el = document.getElementById('item-list');
-  // Guard : afficher chargement si les données de cet onglet ne sont pas prêtes
-  const needsReady = {
-    pr: 'parkings', pk: 'parkings', vv: 'velov', ve: 'bornes', ap: 'autopartage'
-  };
-  const needKey = needsReady[sub];
-  if (needKey && !dataReady[needKey]) {
+  if (!dataLoaded) {
     el.innerHTML = '<div class="loading-msg">⏳ Chargement des données...</div>';
     return;
   }
