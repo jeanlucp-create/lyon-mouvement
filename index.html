@@ -1220,8 +1220,8 @@ function pkExpandedHTML(p, s, cap, nb) {
       _dist: (p.lat && p.lng && b.lat && b.lng) ? haversine(p.lat, p.lng, b.lat, b.lng) : null
     }));
 
-    const bornesDuParking  = bornesWithDist.filter(b => isInParking(b));
-    const bornesProximite  = bornesWithDist.filter(b => !isInParking(b));
+    const bornesDuParking  = bornesWithDist.filter(b => isInParking(b, p.nom));
+    const bornesProximite  = bornesWithDist.filter(b => !isInParking(b, p.nom));
 
     if (bornesDuParking.length) {
       html += renderGroups(buildGroups(bornesDuParking), false);
@@ -1349,6 +1349,18 @@ function normStr(s) {
   return (s||'').toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+}
+
+function isInParking(b, pkNom) {
+  // pkNom est le nom du parking courant (passé en contexte)
+  // Si pas de pkNom, on utilise la variable globale _currentPkNom
+  const nom = pkNom || window._currentPkNom || '';
+  if (!nom) return false;
+  const pkWords = normStr(nom).split(' ').filter(w => w.length > 3);
+  if (!pkWords.length) return false;
+  const bNorm = normStr(b.nom || '');
+  const bAdr  = normStr(b.adresse || '');
+  return pkWords.some(w => bNorm.includes(w) || bAdr.includes(w));
 }
 
 function buildGroups(bList) {
