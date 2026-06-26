@@ -49,14 +49,21 @@
     .ntab.active{background:var(--orange);color:white;border-color:var(--orange)}
     .ntab.line-on{background:var(--orange-light);color:var(--orange-dark);border-color:var(--orange-border)}
 
-    /* Barre vue + recherche */
-    .view-row{display:flex;gap:5px;margin-bottom:8px;position:relative;z-index:1}
-    .view-btn{padding:8px 11px;border-radius:9px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;border:1.5px solid var(--orange-border);background:var(--white);color:var(--muted);display:flex;align-items:center;gap:5px;transition:all .2s;white-space:nowrap}
-    .view-btn.active{background:var(--orange-light);border-color:var(--orange-border);color:var(--orange-dark)}
-    .search-wrap{flex:1;position:relative}
-    .search-input{width:100%;background:var(--white);border:1.5px solid var(--orange-border);border-radius:10px;padding:9px 12px 9px 34px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;color:var(--text);outline:none}
-    .search-input::placeholder{color:var(--muted)}
-    .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+    /* ── ZONES FILTRES ── */
+    .zone1-row{display:flex;gap:5px;padding:6px 12px;background:var(--white);border-bottom:1px solid var(--border)}
+    .zone1-search{display:flex;gap:5px;padding:5px 12px;background:var(--white);border-bottom:1px solid var(--border);align-items:center}
+    .zone2-row{display:flex;gap:5px;padding:5px 12px;background:var(--cream);border-bottom:1px solid var(--border);flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .zone2-row::-webkit-scrollbar{display:none}
+    .zone2-sep{width:1px;height:16px;background:var(--border);flex-shrink:0;align-self:center}
+    .fbtn{padding:6px 11px;border-radius:20px;cursor:pointer;border:1.5px solid var(--orange-border);background:var(--white);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:4px;flex-shrink:0}
+    .fbtn.on{background:var(--orange-light);border-color:var(--orange-border);color:var(--orange-dark)}
+    .fbtn.map-fbtn{background:var(--white);border-color:#1565C0;color:#1565C0}
+    .fbtn.map-fbtn.on{background:#E3F2FD;border-color:#1565C0;color:#1565C0}
+    .fbtn.search-fbtn{padding:6px 10px}
+    .search-input-inline{flex:1;background:var(--white);border:1.5px solid var(--orange-border);border-radius:10px;padding:7px 12px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;color:var(--text);outline:none}
+    .search-input-inline::placeholder{color:var(--muted)}
+    .search-close-btn{padding:6px 10px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;color:var(--muted);cursor:pointer;flex-shrink:0}
+    /* compat ancien code */
     .fav-btn{padding:9px 12px;border-radius:10px;cursor:pointer;border:1.5px solid var(--orange-border);background:var(--white);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;transition:all .2s}
     .fav-btn.on{background:var(--orange-light);border-color:var(--orange-border);color:var(--orange-dark)}
 
@@ -379,14 +386,17 @@
       </div>
     </div>
   </div>
-  <div class="view-row">
-    <button class="view-btn" id="map-btn" onclick="toggleMap()">🗺 Carte</button>
-    <button class="fav-btn" id="near-btn" onclick="nearMe()">📍 Près de moi</button>
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" id="search" type="text" placeholder="Rech..." oninput="renderList()"/>
-    </div>
+  <div class="zone1-row" id="zone1">
+    <button class="fbtn" id="near-btn" onclick="nearMe()">📍 Près de moi</button>
+    <button class="fbtn" id="dist-btn" onclick="toggleDist()">&lt;200m</button>
+    <button class="fbtn map-fbtn" id="map-btn" onclick="toggleMap()">🗺 Carte</button>
+    <button class="fbtn search-fbtn" id="search-btn" onclick="toggleSearch()" aria-label="Rechercher">🔍</button>
   </div>
+  <div class="zone1-search" id="zone1-search" style="display:none">
+    <input class="search-input-inline" id="search" type="text" placeholder="Rechercher..." oninput="renderList()" autocomplete="off"/>
+    <button class="search-close-btn" onclick="toggleSearch()">✕</button>
+  </div>
+  <div class="zone2-row" id="zone2"></div>
 </div>
 
 <!-- MAIN -->
@@ -492,7 +502,16 @@ const WORKER = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev';
 let data = {parkings:{tcl:[],operateurs:[]},velov:[],bornes:[]};
 let sub = 'pr';
 let mapVisible = false, fromMap = false;
-let ctxFilters = { pr:{fav:false,dispo:false}, pk:{fav:false,dispo:false}, vv:{fav:false,dispo:false}, ve:{fav:false,dispo:false} };
+let ctxFilters = {
+  pr: {fav:false, dispo:false, velov:false, bornes:false},
+  pk: {fav:false, dispo:false, velov:false, bornes:false},
+  vv: {fav:false, dispo:false, elec:false},
+  ve: {fav:false, libre:false, rapide:false},
+  ap: {fav:false, dispo:false, elec:true, therm:true, citiz:true, leo:true}
+};
+let distActive = false;
+const DIST_DEFAULT = 200;
+let distVal = DIST_DEFAULT;
 let favorites = JSON.parse(localStorage.getItem('mral_fav')||'[]');
 let selected = null, refTimer = null;
 let userLat = null, userLng = null, nearActive = false;
@@ -731,6 +750,19 @@ function switchSub(s) {
   });
   mapLayers = {pr:s==='pr', pk:s==='pk', vv:s==='vv', ve:s==='ve'};
   updateMapToggleUI();
+  // Masquer zone1 et zone2 pour TCL
+  const z1 = document.getElementById('zone1');
+  const z2 = document.getElementById('zone2');
+  const z1s = document.getElementById('zone1-search');
+  if (s === 'tcl') {
+    if (z1) z1.style.display = 'none';
+    if (z2) z2.style.display = 'none';
+    if (z1s) z1s.style.display = 'none';
+  } else {
+    if (z1) z1.style.display = 'flex';
+    if (z2) z2.style.display = 'flex';
+  }
+  renderZone2(s);
   renderList();
   if (map) renderMap();
 }
@@ -742,18 +774,17 @@ function toggleMap() {
   const btn = document.getElementById('map-btn');
   if (mapVisible) {
     lv.style.display = 'none'; mv.style.display = 'block';
-    btn.textContent = '☰ Liste';
+    btn.innerHTML = '☰ Liste';
+    btn.classList.add('on');
     if (!map) initMap(); else { map.invalidateSize(); renderMap(); }
   } else {
     lv.style.display = 'block'; mv.style.display = 'none';
-    btn.textContent = '🗺 Carte';
+    btn.innerHTML = '🗺 Carte';
+    btn.classList.remove('on');
   }
 }
 
-function toggleCtxFilter(ctx, type) {
-  ctxFilters[ctx][type] = !ctxFilters[ctx][type];
-  renderList();
-}
+
 
 function nearMe() {
   if (!navigator.geolocation) { showToast('Géolocalisation non disponible.'); return; }
@@ -791,13 +822,79 @@ function showToast(msg) {
   setTimeout(() => { t.style.display = 'none'; }, 3000);
 }
 
+// ── ZONES FILTRES ──
+function renderZone2(s) {
+  const f = ctxFilters[s] || {};
+  const z = document.getElementById('zone2');
+  if (!z) return;
+  let html = '';
+  const btn = (key, label, ctx) => {
+    const on = f[key] ? ' on' : '';
+    return `<button class="fbtn${on}" onclick="toggleCtxFilter('${ctx}','${key}')">${label}</button>`;
+  };
+  if (s === 'pr' || s === 'pk') {
+    html += btn('fav','★ Favoris', s);
+    html += btn('dispo','Dispo', s);
+    html += '<div class="zone2-sep"></div>';
+    html += btn('velov',"Vélo'v", s);
+    html += btn('bornes','Bornes', s);
+  } else if (s === 'vv') {
+    html += btn('fav','★ Favoris', s);
+    html += btn('dispo','Dispo', s);
+    html += '<div class="zone2-sep"></div>';
+    html += btn('elec','⚡ Élec seul', s);
+  } else if (s === 've') {
+    html += btn('fav','★ Favoris', s);
+    html += '<div class="zone2-sep"></div>';
+    html += btn('libre','Accès libre', s);
+    html += btn('rapide','Rapide ⚡', s);
+  } else if (s === 'ap') {
+    html += btn('fav','★ Favoris', s);
+    html += btn('dispo','Dispo', s);
+    html += '<div class="zone2-sep"></div>';
+    html += btn('elec','⚡ Élec', s);
+    html += btn('therm','Therm', s);
+    html += '<div class="zone2-sep"></div>';
+    html += btn('citiz','Citiz', s);
+    html += btn('leo','Leo&amp;Go', s);
+  }
+  z.innerHTML = html;
+}
+
+function toggleCtxFilter(ctx, key) {
+  if (!ctxFilters[ctx]) return;
+  ctxFilters[ctx][key] = !ctxFilters[ctx][key];
+  renderZone2(ctx);
+  renderList();
+  if (mapVisible) renderMap();
+}
+
+function toggleDist() {
+  distActive = !distActive;
+  const btn = document.getElementById('dist-btn');
+  if (btn) btn.classList.toggle('on', distActive);
+  if (distActive && userLat === null) {
+    nearMe(true);
+  } else {
+    renderList();
+    if (mapVisible) renderMap();
+  }
+}
+
+function toggleSearch() {
+  const wrap = document.getElementById('zone1-search');
+  const inp = document.getElementById('search');
+  const btn = document.getElementById('search-btn');
+  const open = wrap.style.display === 'none' || wrap.style.display === '';
+  wrap.style.display = open ? 'flex' : 'none';
+  btn.classList.toggle('on', open);
+  if (open) { inp.focus(); }
+  else { inp.value = ''; renderList(); }
+}
+
 // ── RENDU LISTE ──
 function ctxBtns(ctx, totalLabel) {
-  const f = ctxFilters[ctx];
-  return `<span class="sec-lbl-actions">
-    <button class="ctx-btn${f.fav?' on':''}" onclick="toggleCtxFilter('${ctx}','fav')">Filtre ★</button>
-    <button class="ctx-btn${f.dispo?' on':''}" onclick="toggleCtxFilter('${ctx}','dispo')">Dispo</button>
-  </span>`;
+  return '';
 }
 
 function renderList() {
@@ -835,17 +932,30 @@ function renderList() {
 
   if (q) list = list.filter(p => (p.nom||'').toLowerCase().includes(q) || (p.adresse||'').toLowerCase().includes(q));
 
-  // Filtres contextuels indépendants par onglet
+  // Filtres contextuels
   const cf = ctxFilters[sub] || {};
-  if (cf.fav && (sub === 'pr' || sub === 'pk' || sub === 'vv')) list = list.filter(p => isFav(p.id));
+  if (cf.fav) list = list.filter(p => isFav(p.id));
   if (cf.dispo) {
     if (sub === 'pr' || sub === 'pk') list = list.filter(p => (p.places_disponibles||0) > 0);
     else if (sub === 'vv') list = list.filter(v => (v.velos_dispo||0) > 0);
   }
+  // Filtre Vélo'v électrique uniquement
+  if (sub === 'vv' && cf.elec) list = list.filter(v => (v.velos_elec||0) > 0);
+  // Filtre Bornes accès libre
+  if (sub === 've' && cf.libre) list = list.filter(b => (b.condition_acces||'').toLowerCase().includes('libre'));
+  // Filtre Bornes charge rapide (>50 kW)
+  if (sub === 've' && cf.rapide) list = list.filter(b => (b.puissance_max_kw||0) > 50);
 
   if (nearActive && userLat !== null) {
     list = list.map(p => ({...p, _dist: haversine(userLat, userLng, p.lat, p.lng)}));
     list.sort((a, b) => (a._dist||99999) - (b._dist||99999));
+  }
+  // Filtre distance
+  if (distActive && userLat !== null) {
+    list = list.filter(p => {
+      const d = p._dist !== undefined ? p._dist : haversine(userLat, userLng, p.lat, p.lng);
+      return d <= distVal;
+    });
   }
   if (!list.length && sub !== 've' && sub !== 'ap') {
     const lbl = sub === 'pr' ? '🚇 P+R TCL' : sub === 'pk' ? '🅿 Autres parkings' : "🚲 Vélo'v";
@@ -1681,6 +1791,7 @@ function copyAndReserveVelov() {
 }
 
 // ── INIT ──
+renderZone2('pr');
 switchSub('pr');
 loadData();
 setInterval(() => { if (!selected && !mapVisible) loadData(); }, 120000);
