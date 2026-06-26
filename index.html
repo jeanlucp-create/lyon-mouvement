@@ -336,6 +336,10 @@
     .ap-fuel-fill{height:100%;border-radius:2px}
     .ap-fuel-pct{font-size:9px;font-weight:800;min-width:28px;text-align:right;flex-shrink:0}
     .ap-btn-reserver{padding:5px 10px;border-radius:20px;background:var(--orange);color:white;font-size:9px;font-weight:800;border:none;cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif;text-decoration:none;display:inline-flex;align-items:center}
+    .ap-btn-reserve{background:var(--orange-light) !important;color:var(--orange-dark) !important;border:1.5px solid var(--orange-border) !important}
+    .ap-expanded{border-top:1px solid var(--border);padding:4px 0}
+    .ap-card .pk-chevron{transition:transform .2s}
+    .ap-card .pk-chevron.open{transform:rotate(180deg)}
     /* Leo&Go véhicule card */
     .ap-leo-card{background:var(--white);border-radius:13px;border:1.5px solid var(--border);margin-bottom:6px;padding:10px 12px;display:flex;align-items:center;gap:8px}
   </style>
@@ -634,105 +638,146 @@ function fuelColor(pct) {
 
 function renderAutopartage(el, q) {
   const ap = data.autopartage || {};
-  const citiz = ap.citiz || [];
-  const leoandgo = ap.leoandgo || [];
+  const cf = ctxFilters.ap || {};
+  const citizNom = n => Array.isArray(n) ? (n[0]?.text || '') : (n || '');
   let html = '';
 
   // ── CITIZ LPA ──
-  // Le champ nom peut être un tableau d'objets [{text:"...",language:"fr"}] ou une string
-  const citizNom = n => Array.isArray(n) ? (n[0]?.text || '') : (n || '');
-
-  const citizFiltered = q
-    ? citiz.filter(s => citizNom(s.nom).toLowerCase().includes(q) || (s.adresse||'').toLowerCase().includes(q))
-    : citiz;
-
-  html += `<div class="ap-section-lbl">🚗 Citiz LPA · stations · ${citiz.filter(s=>s.nb_dispo>0).length} avec véhicules</div>`;
-
-  if (citizFiltered.length) {
-    citizFiltered.forEach(s => {
-      const hasDispo = s.nb_dispo > 0;
-      const dotC = hasDispo ? 'bg-green' : 'bg-gray';
-      const nbC = hasDispo ? 'c-green' : 'c-gray';
-      const navUrl = s.lat && s.lng
-        ? `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}` : '#';
-      const distBadge = nearActive && s._dist != null ? ` · ${fmtDist(s._dist)}` : '';
-
-      html += `<div class="ap-card ${hasDispo ? 'has-dispo' : ''}">
-        <div class="ap-station-row">
-          <div class="ap-logo ap-logo-citiz">Ctz</div>
-          <div class="ap-info">
-            <div class="ap-nom">${citizNom(s.nom)}</div>
-            <div class="ap-meta">${s.adresse || ''}${distBadge}</div>
-          </div>
-          <div class="ap-right">
-            <div>
-              <div class="ap-nb ${nbC}">${s.nb_dispo}</div>
-              <div class="ap-cap">/ ${s.capacite || '?'}</div>
-            </div>
-            <div class="ap-dot ${dotC}"></div>
-          </div>
-        </div>`;
-
-      if (s.vehicules && s.vehicules.length) {
-        s.vehicules.forEach(v => {
-          const pct = v.carburant || 0;
-          const rangeStr = `${pct}%`;
-          html += `<div class="ap-veh-row">
-            <div class="ap-veh-ico ${propClass(v.propulsion)}">${propIcon(v.propulsion)}</div>
-            <div class="ap-veh-info">
-              <div class="ap-veh-nom">${citizNom(v.nom)}</div>
-              <div class="ap-veh-range">${rangeStr}</div>
-            </div>
-            <div class="ap-fuel-bar"><div class="ap-fuel-fill" style="width:${pct}%;background:${fuelColor(pct)}"></div></div>
-            <div class="ap-fuel-pct" style="color:${fuelColor(pct)}">${pct}%</div>
-            <a href="${navUrl}" target="_blank" rel="noopener" class="ap-btn-reserver">🗺 Y aller</a>
-            <a href="https://www.citiz.coop/nos-agences/citiz-lyon" target="_blank" rel="noopener" class="ap-btn-reserver" style="background:var(--orange-light);color:var(--orange-dark);border:1px solid var(--orange-border)">Réserver</a>
-          </div>`;
+  if (cf.citiz !== false) {
+    let citiz = ap.citiz || [];
+    if (q) citiz = citiz.filter(s => citizNom(s.nom).toLowerCase().includes(q) || (s.adresse||'').toLowerCase().includes(q));
+    if (cf.dispo) citiz = citiz.filter(s => s.nb_dispo > 0);
+    // Filtre type véhicule
+    if (!cf.elec || !cf.therm) {
+      citiz = citiz.filter(s => {
+        if (!s.vehicules || !s.vehicules.length) return true;
+        return s.vehicules.some(v => {
+          const p = (v.propulsion||'').toLowerCase();
+          const isElec = p.includes('electric');
+          const isHybrid = p.includes('hybrid');
+          const isTherm = !isElec && !isHybrid;
+          if (cf.elec && (isElec || isHybrid)) return true;
+          if (cf.therm && (isTherm || isHybrid)) return true;
+          return false;
         });
-      } else if (!hasDispo) {
-        html += `<div style="padding:8px 12px 10px;font-size:10px;color:var(--muted);font-style:italic">Aucun véhicule disponible</div>`;
-      }
-      html += `</div>`;
-    });
-  } else {
-    html += `<div class="empty-msg">Aucune station Citiz trouvée</div>`;
+      });
+    }
+    if (nearActive && userLat !== null) {
+      citiz = citiz.map(s => ({...s, _dist: haversine(userLat, userLng, s.lat, s.lng)}));
+      citiz.sort((a,b) => (a._dist||99999) - (b._dist||99999));
+    }
+    if (distActive && userLat !== null) {
+      citiz = citiz.filter(s => haversine(userLat, userLng, s.lat, s.lng) <= distVal);
+    }
+
+    html += `<div class="ap-section-lbl">🚗 Citiz LPA · ${citiz.filter(s=>s.nb_dispo>0).length} stations avec véhicules</div>`;
+    if (citiz.length) {
+      citiz.forEach(s => {
+        const hasDispo = s.nb_dispo > 0;
+        const dotC = hasDispo ? 'bg-green' : 'bg-gray';
+        const nbC  = hasDispo ? 'c-green'  : 'c-gray';
+        const navUrl = s.lat && s.lng ? `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}` : '#';
+        const distBadge = nearActive && s._dist != null ? ` · ${fmtDist(s._dist)}` : '';
+
+        // Ligne repliée
+        html += `<div class="ap-card${hasDispo ? ' has-dispo' : ''}">
+          <div class="ap-station-row" onclick="toggleApAccordion(this)">
+            <div class="ap-logo ap-logo-citiz">Ctz</div>
+            <div class="ap-info">
+              <div class="ap-nom">${citizNom(s.nom)}</div>
+              <div class="ap-meta">${s.adresse || ''}${distBadge}</div>
+            </div>
+            <div class="ap-right">
+              <div>
+                <div class="ap-nb ${nbC}">${s.nb_dispo}</div>
+                <div class="ap-cap">/ ${s.capacite || '?'}</div>
+              </div>
+              <div class="ap-dot ${dotC}"></div>
+              <i class="ti ti-chevron-down pk-chevron" aria-hidden="true"></i>
+            </div>
+          </div>
+          <div class="ap-expanded" style="display:none">`;
+
+        if (s.vehicules && s.vehicules.length) {
+          s.vehicules.forEach(v => {
+            const pct = v.carburant || 0;
+            html += `<div class="ap-veh-row">
+              <div class="ap-veh-ico ${propClass(v.propulsion)}">${propIcon(v.propulsion)}</div>
+              <div class="ap-veh-info">
+                <div class="ap-veh-nom">${citizNom(v.nom)}</div>
+              </div>
+              <div class="ap-fuel-bar"><div class="ap-fuel-fill" style="width:${pct}%;background:${fuelColor(pct)}"></div></div>
+              <div class="ap-fuel-pct" style="color:${fuelColor(pct)}">${pct}%</div>
+              <a href="${navUrl}" target="_blank" rel="noopener" class="ap-btn-reserver">🗺 Y aller</a>
+              <a href="https://www.citiz.coop" target="_blank" rel="noopener" class="ap-btn-reserver ap-btn-reserve">Réserver</a>
+            </div>`;
+          });
+        } else {
+          html += `<div style="padding:8px 12px 10px;font-size:10px;color:var(--muted);font-style:italic">Aucun véhicule disponible</div>`;
+        }
+        html += `</div></div>`;
+      });
+    } else {
+      html += `<div class="empty-msg">Aucune station Citiz</div>`;
+    }
   }
 
   // ── LEO&GO ──
-  const leoFiltered = q
-    ? leoandgo.filter(v => (v.nom||'').toLowerCase().includes(q))
-    : leoandgo;
-
-  const leoWithDist = nearActive && userLat !== null
-    ? leoFiltered.map(v => ({...v, _dist: haversine(userLat, userLng, v.lat, v.lng)})).sort((a,b) => a._dist - b._dist)
-    : leoFiltered;
-
-  html += `<div class="ap-section-lbl" style="margin-top:4px">🚗 Leo&Go · free-floating · ${leoandgo.length} véhicules disponibles</div>`;
-
-  if (leoWithDist.length) {
-    leoWithDist.slice(0, 30).forEach(v => {
-      const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`;
-      const distBadge = v._dist != null ? `· ${fmtDist(v._dist)}` : '';
-      const rangeStr = v.autonomie_km ? `${v.autonomie_km} km` : '—';
-      html += `<div class="ap-leo-card">
-        <div class="ap-logo ap-logo-leo">L&G</div>
-        <div class="ap-veh-ico ${propClass(v.propulsion)}" style="flex-shrink:0">${propIcon(v.propulsion)}</div>
-        <div class="ap-info">
-          <div class="ap-nom">${v.nom}</div>
-          <div class="ap-meta">Autonomie ${rangeStr} ${distBadge}</div>
-        </div>
-        <a href="${navUrl}" target="_blank" rel="noopener" class="ap-btn-reserver">🗺 Y aller</a>
-        <a href="https://app.leoandgo.com" target="_blank" rel="noopener" class="ap-btn-reserver" style="background:var(--orange-light);color:var(--orange-dark);border:1px solid var(--orange-border)">Réserver</a>
-      </div>`;
-    });
-    if (leoWithDist.length > 30) {
-      html += `<div style="text-align:center;font-size:10px;color:var(--muted);padding:6px 0">… et ${leoWithDist.length - 30} autres véhicules disponibles</div>`;
+  if (cf.leo !== false) {
+    let leoandgo = ap.leoandgo || [];
+    if (q) leoandgo = leoandgo.filter(v => (v.nom||'').toLowerCase().includes(q));
+    if (!cf.elec || !cf.therm) {
+      leoandgo = leoandgo.filter(v => {
+        const p = (v.propulsion||'').toLowerCase();
+        const isElec = p.includes('electric');
+        if (cf.elec && isElec) return true;
+        if (cf.therm && !isElec) return true;
+        return false;
+      });
     }
-  } else {
-    html += `<div class="empty-msg">Aucun véhicule Leo&Go disponible</div>`;
+    if (nearActive && userLat !== null) {
+      leoandgo = leoandgo.map(v => ({...v, _dist: haversine(userLat, userLng, v.lat, v.lng)}));
+      leoandgo.sort((a,b) => a._dist - b._dist);
+    }
+    if (distActive && userLat !== null) {
+      leoandgo = leoandgo.filter(v => haversine(userLat, userLng, v.lat, v.lng) <= distVal);
+    }
+
+    html += `<div class="ap-section-lbl" style="margin-top:4px">🚗 Leo&Go · ${leoandgo.length} véhicules disponibles</div>`;
+    if (leoandgo.length) {
+      leoandgo.slice(0, 30).forEach(v => {
+        const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`;
+        const distBadge = v._dist != null ? `· ${fmtDist(v._dist)}` : '';
+        const rangeStr = v.autonomie_km ? `${v.autonomie_km} km` : '—';
+        html += `<div class="ap-leo-card">
+          <div class="ap-logo ap-logo-leo">L&G</div>
+          <div class="ap-veh-ico ${propClass(v.propulsion)}" style="flex-shrink:0">${propIcon(v.propulsion)}</div>
+          <div class="ap-info">
+            <div class="ap-nom">${v.nom}</div>
+            <div class="ap-meta">Autonomie ${rangeStr} ${distBadge}</div>
+          </div>
+          <a href="${navUrl}" target="_blank" rel="noopener" class="ap-btn-reserver">🗺 Y aller</a>
+          <a href="https://app.leoandgo.com" target="_blank" rel="noopener" class="ap-btn-reserver ap-btn-reserve">Réserver</a>
+        </div>`;
+      });
+      if (leoandgo.length > 30) {
+        html += `<div style="text-align:center;font-size:10px;color:var(--muted);padding:6px 0">… et ${leoandgo.length - 30} autres véhicules disponibles</div>`;
+      }
+    } else {
+      html += `<div class="empty-msg">Aucun véhicule Leo&Go disponible</div>`;
+    }
   }
 
   el.innerHTML = html;
+}
+
+function toggleApAccordion(row) {
+  const card = row.closest('.ap-card');
+  const exp = card.querySelector('.ap-expanded');
+  const ch  = card.querySelector('.pk-chevron');
+  const isOpen = exp.style.display !== 'none';
+  exp.style.display = isOpen ? 'none' : 'block';
+  if (ch) ch.classList.toggle('open', !isOpen);
 }
 
 // ── NAVIGATION ──
@@ -757,7 +802,7 @@ function switchSub(s) {
     const el = document.getElementById('tab-'+k); if (!el) return;
     el.className = k === s ? 'ntab active' : !isStat ? 'ntab line-on' : 'ntab';
   });
-  mapLayers = {pr:s==='pr', pk:s==='pk', vv:s==='vv', ve:s==='ve'};
+  mapLayers = {pr:s==='pr', pk:s==='pk', vv:s==='vv', ve:s==='ve', ap:s==='ap'};
   updateMapToggleUI();
   // Masquer zone1 et zone2 pour TCL
   const z1 = document.getElementById('zone1');
@@ -1621,6 +1666,26 @@ function renderMap() {
     const kw = b.puissance_max_kw || 0;
     addM(b.lat, b.lng, col, 22, kw > 0 ? kw+'k' : '⚡', b.nom, (b.operateur||'')+ ' · '+(b.nb_points||1)+' pt', 'borne', '#1A1A2E', 0, 0, null);
   });
+
+  if (mapLayers.ap) {
+    const ap = data.autopartage || {};
+    const citizNomG = n => Array.isArray(n) ? (n[0]?.text || '') : (n || '');
+    // Citiz — marqueurs de station
+    if (cf.citiz !== false) (ap.citiz||[]).forEach(s => {
+      if (!s.lat || !s.lng) return;
+      if (!inDist(s.lat, s.lng)) return;
+      if (cf.dispo && s.nb_dispo <= 0) return;
+      if (cf.elec === false && cf.therm !== false) return; // filtre type véhicule
+      const col = s.nb_dispo > 0 ? colHex('green') : colHex('gray');
+      addM(s.lat, s.lng, col, 26, String(s.nb_dispo), citizNomG(s.nom), s.nb_dispo+' véh. dispo', 'citiz', '#00A88E', 0, 0, s.id);
+    });
+    // Leo&Go — marqueurs véhicules individuels
+    if (cf.leo !== false) (ap.leoandgo||[]).forEach(v => {
+      if (!v.lat || !v.lng) return;
+      if (!inDist(v.lat, v.lng)) return;
+      addM(v.lat, v.lng, colHex('green'), 22, '🚗', v.nom, v.autonomie_km ? v.autonomie_km+'km' : '', 'leoandgo', '#E65C00', 0, 0, v.id);
+    });
+  }
 }
 
 function pinSVG(label, bg, border, nb, nbColor) {
