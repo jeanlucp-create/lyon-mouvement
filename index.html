@@ -795,8 +795,19 @@ function switchSub(s) {
   sub = s;
   document.getElementById('search').value = '';
   nearActive = false;
+  distActive = false;
+  // Toujours revenir en vue liste au changement d'onglet
+  mapVisible = false;
+  const lv = document.getElementById('list-view');
+  const mv = document.getElementById('map-view');
+  const mapBtn = document.getElementById('map-btn');
+  if (lv) lv.style.display = 'block';
+  if (mv) mv.style.display = 'none';
+  if (mapBtn) { mapBtn.innerHTML = '🗺 Carte'; mapBtn.classList.remove('on'); }
   const nearBtn = document.getElementById('near-btn');
   if (nearBtn) { nearBtn.classList.remove('on'); nearBtn.style.display = (s === 'tcl') ? 'none' : ''; }
+  const distBtn = document.getElementById('dist-btn');
+  if (distBtn) distBtn.classList.remove('on');
   const statTabs = ['pr','pk','ve'], depTabs = ['vv','tcl','ap'];
   const isStat = statTabs.includes(s);
   document.getElementById('lbl-stat').className = 'nav-lbl' + (isStat ? ' active' : '');
