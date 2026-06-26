@@ -611,8 +611,11 @@ function renderAutopartage(el, q) {
   let html = '';
 
   // ── CITIZ LPA ──
+  // Le champ nom peut être un tableau d'objets [{text:"...",language:"fr"}] ou une string
+  const citizNom = n => Array.isArray(n) ? (n[0]?.text || '') : (n || '');
+
   const citizFiltered = q
-    ? citiz.filter(s => (s.nom||'').toLowerCase().includes(q) || (s.adresse||'').toLowerCase().includes(q))
+    ? citiz.filter(s => citizNom(s.nom).toLowerCase().includes(q) || (s.adresse||'').toLowerCase().includes(q))
     : citiz;
 
   html += `<div class="ap-section-lbl">🚗 Citiz LPA · stations · ${citiz.filter(s=>s.nb_dispo>0).length} avec véhicules</div>`;
@@ -630,7 +633,7 @@ function renderAutopartage(el, q) {
         <div class="ap-station-row">
           <div class="ap-logo ap-logo-citiz">Ctz</div>
           <div class="ap-info">
-            <div class="ap-nom">${s.nom}</div>
+            <div class="ap-nom">${citizNom(s.nom)}</div>
             <div class="ap-meta">${s.adresse || ''}${distBadge}</div>
           </div>
           <div class="ap-right">
@@ -645,11 +648,11 @@ function renderAutopartage(el, q) {
       if (s.vehicules && s.vehicules.length) {
         s.vehicules.forEach(v => {
           const pct = v.carburant || 0;
-          const rangeStr = v.autonomie_km ? `${v.autonomie_km} km` : `${pct}%`;
+          const rangeStr = `${pct}%`;
           html += `<div class="ap-veh-row">
             <div class="ap-veh-ico ${propClass(v.propulsion)}">${propIcon(v.propulsion)}</div>
             <div class="ap-veh-info">
-              <div class="ap-veh-nom">${v.nom}</div>
+              <div class="ap-veh-nom">${citizNom(v.nom)}</div>
               <div class="ap-veh-range">${rangeStr}</div>
             </div>
             <div class="ap-fuel-bar"><div class="ap-fuel-fill" style="width:${pct}%;background:${fuelColor(pct)}"></div></div>
@@ -1686,3 +1689,4 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catc
 </script>
 </body>
 </html>
+
