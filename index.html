@@ -513,7 +513,7 @@
 const WORKER      = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev/?mode=full';
 const WORKER_FAST = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev/?mode=fast';
 let data = {parkings:{tcl:[],operateurs:[]},velov:[],bornes:[]};
-let dataLoaded = false;
+let dataReady = {parkings: false, velov: false, bornes: false, autopartage: false};
 let sub = 'pr';
 let mapVisible = false, fromMap = false;
 let ctxFilters = {
@@ -613,11 +613,12 @@ async function loadData() {
     const fast = await rFast.json();
     data.parkings = fast.parkings || {tcl:[], operateurs:[]};
     data.velov = fast.velov || [];
-    dataLoaded = true;
+    dataReady.parkings = true;
+    dataReady.velov = true;
     renderList();
     if (map) renderMap();
 
-    // ── ÉTAPE 2 : full — bornes + autopartage (arrière-plan) ──
+    // ── ÉTAPE 2 : full — toutes données en arrière-plan ──
     try {
       const rFull = await fetchWithRetry(WORKER);
       const full = await rFull.json();
@@ -625,6 +626,8 @@ async function loadData() {
       data.velov = full.velov || data.velov;
       data.bornes = full.bornes || [];
       data.autopartage = full.autopartage || {citiz:[], leoandgo:[]};
+      dataReady.bornes = true;
+      dataReady.autopartage = true;
       renderList();
       if (map) renderMap();
     } catch(e2) {
@@ -997,7 +1000,12 @@ function setHtmlPreservingAccordions(el, html) {
 function renderList() {
   const q = document.getElementById('search').value.toLowerCase().trim();
   const el = document.getElementById('item-list');
-  if (!dataLoaded) {
+  // Guard : afficher chargement si les données de cet onglet ne sont pas prêtes
+  const needsReady = {
+    pr: 'parkings', pk: 'parkings', vv: 'velov', ve: 'bornes', ap: 'autopartage'
+  };
+  const needKey = needsReady[sub];
+  if (needKey && !dataReady[needKey]) {
     el.innerHTML = '<div class="loading-msg">⏳ Chargement des données...</div>';
     return;
   }
@@ -1095,32 +1103,21 @@ function renderList() {
     rest.forEach(v => html += vvHTML(v));
     html += `</div>`;
   } else if (sub === 've') {
-    // Regrouper par lieu/opérateur/accès, puis trier par catégorie
+    // Regrouper par adresse — pas de séparation par puissance
     const listWithDist = nearActive && userLat !== null
       ? list.map(b => ({...b, _dist: b._dist !== undefined ? b._dist : haversine(userLat, userLng, b.lat, b.lng)}))
       : list;
     const groups = buildGroups(listWithDist);
-    // Trier les groupes par catégorie dominante de leur première borne
-    const catOrder = {rapide:0, acceleree:1, normale:2};
-    const getGroupCat = g => g.stations[0]?.categorie || 'normale';
-    groups.sort((a, b) => (catOrder[getGroupCat(a)]||2) - (catOrder[getGroupCat(b)]||2));
-    const rapideGrp   = groups.filter(g => getGroupCat(g) === 'rapide');
-    const accelereeGrp = groups.filter(g => getGroupCat(g) === 'acceleree');
-    const normaleGrp  = groups.filter(g => getGroupCat(g) === 'normale');
-    if (rapideGrp.length) {
-      html += `<div class="sec-lbl">⚡ Charge rapide (≥ 50 kW) · ${rapideGrp.length}</div><div class="parking-list">`;
-      rapideGrp.forEach(g => html += borneGroupHTML(g, nearActive));
-      html += `</div>`;
+    // Trier par distance si "Près de moi", sinon alphabétique
+    if (nearActive && userLat !== null) {
+      groups.sort((a, b) => (a.dist||99999) - (b.dist||99999));
     }
-    if (accelereeGrp.length) {
-      html += `<div class="sec-lbl">⚡ Charge accélérée (22–50 kW) · ${accelereeGrp.length}</div><div class="parking-list">`;
-      accelereeGrp.forEach(g => html += borneGroupHTML(g, nearActive));
+    const total = groups.length;
+    if (total) {
+      html += `<div class="sec-lbl">⚡ Bornes de recharge · ${total} stations</div><div class="parking-list">`;
+      groups.slice(0, 80).forEach(g => html += borneGroupHTML(g, nearActive));
       html += `</div>`;
-    }
-    if (normaleGrp.length) {
-      html += `<div class="sec-lbl">⚡ Charge normale (< 22 kW) · ${normaleGrp.length}</div><div class="parking-list">`;
-      normaleGrp.slice(0, 60).forEach(g => html += borneGroupHTML(g, nearActive));
-      html += `</div>`;
+      if (total > 80) html += `<div style="text-align:center;font-size:10px;color:var(--muted);padding:6px 0">… et ${total - 80} autres stations — affinez avec les filtres ou "Près de moi"</div>`;
     }
     html += `<div style="text-align:center;font-size:10px;color:var(--muted);padding:8px 0">Source : Base nationale IRVE · transport.data.gouv.fr · Données statiques</div>`;
   }
