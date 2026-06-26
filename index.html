@@ -512,7 +512,6 @@
 <script>
 const WORKER = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev';
 let data = {parkings:{tcl:[],operateurs:[]},velov:[],bornes:[]};
-let dataLoaded = false;
 let lastRenderedSub = null;
 let sub = 'pr';
 let mapVisible = false, fromMap = false;
@@ -610,7 +609,6 @@ async function loadData() {
     data.velov = raw.velov || [];
     data.bornes = raw.bornes || [];
     data.autopartage = raw.autopartage || {citiz:[], leoandgo:[]};
-    dataLoaded = true;
     renderList();
     if (map) renderMap();
   } catch(e) {
@@ -994,10 +992,7 @@ function setHtmlPreservingAccordions(el, html) {
 function renderList() {
   const q = document.getElementById('search').value.toLowerCase().trim();
   const el = document.getElementById('item-list');
-  if (!dataLoaded) {
-    el.innerHTML = '<div class="loading-msg">⏳ Chargement des données...</div>';
-    return;
-  }
+
 
   if (sub === 'tcl') {
     el.innerHTML = `
@@ -1554,6 +1549,7 @@ function closeDetail() {
   if (refTimer) clearInterval(refTimer);
   document.getElementById('detail-view').style.display = 'none';
   selected = null;
+  lastRenderedSub = null; // forcer re-render complet
   if (fromMap) {
     document.getElementById('map-view').style.display = 'block';
     mapVisible = true;
