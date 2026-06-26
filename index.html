@@ -1382,7 +1382,14 @@ function borneHTML(b) {
   const navUrl = b.lat && b.lng
     ? `geo:${b.lat},${b.lng}?q=${encodeURIComponent(b.nom||'Borne recharge')}` : '#';
 
+  const dispoUrl = b.lat && b.lng
+    ? `https://www.google.com/maps/search/borne+recharge/@${b.lat},${b.lng},17z` : '#';
+
   const expanded = `
+    <div class="acc-act-row" style="margin-bottom:10px">
+      <a class="acc-act-btn acc-act-nav" href="${navUrl}" target="_blank" rel="noopener">📍 S'y rendre</a>
+      <a class="acc-act-btn acc-act-map" href="${dispoUrl}" target="_blank" rel="noopener">⚡ Voir dispo</a>
+    </div>
     <div class="exp-lbl">Types de prise</div>
     <div class="prise-tags" style="margin-bottom:10px">${priseTags}</div>
     <div class="ve-detail-grid">
@@ -1399,12 +1406,7 @@ function borneHTML(b) {
         <div class="ve-detail-val" style="font-size:11px">${horairesVal}</div>
       </div>
       ${tarifVal !== '—' ? `<div class="ve-detail-cell" style="grid-column:1/-1"><div class="ve-detail-lbl">Tarification</div><div class="ve-detail-val" style="font-size:11px">${tarifVal}</div></div>` : ''}
-    </div>
-    <a class="ve-chargemap" href="${chargemapUrl}" target="_blank" rel="noopener">⚡ Voir disponibilité sur ChargeMap ↗</a>
-    <a class="ve-nav" href="${navUrl}" target="_blank" rel="noopener">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-      S'y rendre
-    </a>`;
+    </div>`;
 
   return `<div class="ve-card">
     <div class="ve-row" onclick="toggleVeAccordion(this)">
