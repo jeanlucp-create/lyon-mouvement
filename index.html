@@ -1305,14 +1305,19 @@ function normStr(s) {
 function buildGroups(bList) {
   const groups = [], groupMap = {};
   bList.forEach(b => {
+    // Grouper par adresse réelle en priorité, sinon par nom nettoyé
+    const adresse = (b.adresse || '').trim();
     let cleaned = cleanLieu(b.nom);
     if (!cleaned) cleaned = b.enseigne || b.operateur || b.nom || '—';
     const lieu = cleaned.split(' - ')[0].trim();
     const op   = (b.operateur || '—').trim();
     const acc  = (b.condition_acces || '').trim();
-    const key  = `${lieu}||${op}||${acc}`;
+    // Clé = adresse (si disponible) + opérateur + accès
+    const key  = adresse ? `${adresse}||${op}||${acc}` : `${lieu}||${op}||${acc}`;
     if (!groupMap[key]) {
-      const g = { lieu, op, acc, lat: b.lat, lng: b.lng, dist: b._dist,
+      // Afficher l'adresse comme nom de groupe si disponible, sinon nom nettoyé
+      const nomGroupe = adresse || lieu;
+      const g = { lieu: nomGroupe, op, acc, lat: b.lat, lng: b.lng, dist: b._dist,
                   horaires: b.horaires, tarif: b.tarification, stations: [] };
       groupMap[key] = g; groups.push(g);
     }
@@ -1330,12 +1335,13 @@ function renderGroups(groups, showDist) {
       ? `<span style="font-size:8px;color:var(--muted);font-weight:700"> · ${g.acc}</span>` : '';
     const distBadge = showDist && g.dist != null
       ? `<span style="font-size:8px;color:var(--muted);font-weight:600"> · ${fmtDist(g.dist)}</span>` : '';
-    const horairesRow = g.horaires && g.horaires !== '—'
-      ? `<div class="ve-detail-cell" style="grid-column:1/-1"><div class="ve-detail-lbl">Horaires</div><div class="ve-detail-val" style="font-size:11px">${g.horaires}</div></div>` : '';
-    const tarifRow = g.tarif && g.tarif !== '—'
-      ? `<div class="ve-detail-cell" style="grid-column:1/-1"><div class="ve-detail-lbl">Tarification</div><div class="ve-detail-val" style="font-size:11px">${g.tarif}</div></div>` : '';
+    // Accès + Horaires sur la même ligne, Tarif en dessous si présent
     const accRow = g.acc
       ? `<div class="ve-detail-cell"><div class="ve-detail-lbl">Accès</div><div class="ve-detail-val" style="font-size:11px">${g.acc}</div></div>` : '';
+    const horairesRow = g.horaires && g.horaires !== '—'
+      ? `<div class="ve-detail-cell"><div class="ve-detail-lbl">Horaires</div><div class="ve-detail-val" style="font-size:11px">${g.horaires}</div></div>` : '';
+    const tarifRow = g.tarif && g.tarif !== '—'
+      ? `<div class="ve-detail-cell" style="grid-column:1/-1"><div class="ve-detail-lbl">Tarification</div><div class="ve-detail-val" style="font-size:11px">${g.tarif}</div></div>` : '';
     const detailGrid = (accRow || horairesRow || tarifRow)
       ? `<div class="ve-detail-grid" style="margin-top:8px">${accRow}${horairesRow}${tarifRow}</div>` : '';
 
@@ -1816,4 +1822,3 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catc
 </script>
 </body>
 </html>
-
