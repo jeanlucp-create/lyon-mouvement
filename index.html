@@ -510,8 +510,10 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const WORKER = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev';
+const WORKER      = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev/?mode=full';
+const WORKER_FAST = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev/?mode=fast';
 let data = {parkings:{tcl:[],operateurs:[]},velov:[],bornes:[]};
+let dataLoaded = false;
 let sub = 'pr';
 let mapVisible = false, fromMap = false;
 let ctxFilters = {
@@ -594,27 +596,41 @@ function kwClass(cat) {
 }
 
 // ── CHARGEMENT ──
+async function fetchWithRetry(url) {
+  let r, lastErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try { r = await fetch(url); if (r.ok) return r; lastErr = new Error('Erreur HTTP ' + r.status); }
+    catch(e) { lastErr = e; if (attempt < 2) await new Promise(res => setTimeout(res, 1200*(attempt+1))); }
+  }
+  throw lastErr || new Error('Impossible de joindre le serveur');
+}
+
 async function loadData() {
   document.getElementById('err-zone').innerHTML = '';
   try {
-    let r, lastErr;
-    // Chargement prioritaire : on affiche dès que les données arrivent
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try { r = await fetch(WORKER); if (r.ok) break; lastErr = new Error('Erreur HTTP ' + r.status); }
-      catch(e) { lastErr = e; if (attempt < 2) await new Promise(res => setTimeout(res, 1200*(attempt+1))); }
-    }
-    if (!r || !r.ok) throw lastErr || new Error('Impossible de joindre le serveur');
-    // Stream JSON : afficher P+R dès que possible
-    const raw = await r.json();
-    // Afficher P+R en premier
-    data.parkings = raw.parkings || {tcl:[], operateurs:[]};
-    data.velov = raw.velov || [];
+    // ── ÉTAPE 1 : fast — parking + vélo'v ──
+    const rFast = await fetchWithRetry(WORKER_FAST);
+    const fast = await rFast.json();
+    data.parkings = fast.parkings || {tcl:[], operateurs:[]};
+    data.velov = fast.velov || [];
+    dataLoaded = true;
     renderList();
-    // Puis injecter bornes et autopartage
-    data.bornes = raw.bornes || [];
-    data.autopartage = raw.autopartage || {citiz:[], leoandgo:[]};
-    if (sub === 've' || sub === 'ap') renderList();
     if (map) renderMap();
+
+    // ── ÉTAPE 2 : full — bornes + autopartage (arrière-plan) ──
+    try {
+      const rFull = await fetchWithRetry(WORKER);
+      const full = await rFull.json();
+      data.parkings = full.parkings || data.parkings;
+      data.velov = full.velov || data.velov;
+      data.bornes = full.bornes || [];
+      data.autopartage = full.autopartage || {citiz:[], leoandgo:[]};
+      renderList();
+      if (map) renderMap();
+    } catch(e2) {
+      console.warn('Full load failed:', e2.message);
+    }
+
   } catch(e) {
     document.getElementById('err-zone').innerHTML =
       `<div class="error-msg">⚠️ ${e.message}</div>`;
@@ -688,7 +704,7 @@ function renderAutopartage(el, q) {
         const distBadge = nearActive && s._dist != null ? ` · ${fmtDist(s._dist)}` : '';
 
         // Ligne repliée
-        html += `<div class="ap-card${hasDispo ? ' has-dispo' : ''}">
+        html += `<div class="ap-card${hasDispo ? ' has-dispo' : ''}" data-id="${s.id}">
           <div class="ap-station-row" onclick="toggleApAccordion(this)">
             <div class="ap-logo ap-logo-citiz">Ctz</div>
             <div class="ap-info">
@@ -780,7 +796,7 @@ function renderAutopartage(el, q) {
     }
   }
 
-  el.innerHTML = html;
+  setHtmlPreservingAccordions(el, html);
 }
 
 function toggleApAccordion(row) {
@@ -954,9 +970,37 @@ function ctxBtns(ctx, totalLabel) {
   return '';
 }
 
+function setHtmlPreservingAccordions(el, html) {
+  // Sauvegarder les accordéons ouverts
+  const openIds = [];
+  el.querySelectorAll('[data-id]').forEach(card => {
+    const exp = card.querySelector('.pk-expanded, .ve-expanded, .ap-expanded');
+    if (exp && (exp.classList.contains('open') || exp.style.display === 'block')) {
+      openIds.push(card.dataset.id);
+    }
+  });
+  el.innerHTML = html;
+  // Restaurer les accordéons ouverts
+  openIds.forEach(id => {
+    const card = el.querySelector(`[data-id="${id}"]`);
+    if (!card) return;
+    const exp = card.querySelector('.pk-expanded, .ve-expanded, .ap-expanded');
+    const ch  = card.querySelector('.pk-chevron');
+    if (exp) {
+      if (exp.classList.contains('ap-expanded')) exp.style.display = 'block';
+      else exp.classList.add('open');
+    }
+    if (ch) ch.classList.add('open');
+  });
+}
+
 function renderList() {
   const q = document.getElementById('search').value.toLowerCase().trim();
   const el = document.getElementById('item-list');
+  if (!dataLoaded) {
+    el.innerHTML = '<div class="loading-msg">⏳ Chargement des données...</div>';
+    return;
+  }
 
   if (sub === 'tcl') {
     el.innerHTML = `
@@ -1082,26 +1126,7 @@ function renderList() {
   }
 
   html += `<div class="legal"><a href="https://data.grandlyon.com" target="_blank">Grand Lyon Open Data</a> — <a href="https://transport.data.gouv.fr/resources/licence-mobilites" target="_blank">Licence Mobilités</a> · © Grand Lyon — SYTRAL</div>`;
-  // Restaurer les accordéons ouverts
-  const openIds = [];
-  el.querySelectorAll('.pk-expanded.open, .ve-expanded.open').forEach(exp => {
-    const card = exp.closest('[data-id]');
-    if (card) openIds.push(card.dataset.id);
-  });
-
-  el.innerHTML = html;
-
-  // Réouvrir les accordéons qui étaient ouverts
-  if (openIds.length) {
-    openIds.forEach(id => {
-      const card = el.querySelector(`[data-id="${id}"]`);
-      if (!card) return;
-      const exp = card.querySelector('.pk-expanded, .ve-expanded');
-      const ch  = card.querySelector('.pk-chevron');
-      if (exp) { exp.classList.add('open'); }
-      if (ch)  { ch.classList.add('open'); }
-    });
-  }
+  setHtmlPreservingAccordions(el, html);
 }
 
 // ── HTML PARKING ACCORDION ──
@@ -1911,7 +1936,7 @@ function copyAndReserveVelov() {
 renderZone2('pr');
 switchSub('pr');
 loadData();
-setInterval(() => { if (!selected && !mapVisible) loadData(); }, 120000);
+setInterval(() => { if (!selected && !mapVisible) loadData(); }, 120000); // refresh toutes les 2min
 (function(){ const nb = document.getElementById('near-btn'); if (nb && sub === 'tcl') nb.style.display = 'none'; })();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
