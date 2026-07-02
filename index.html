@@ -1,4 +1,4 @@
-<!-- Me rendre à Lyon — v13j -->
+<!-- Me rendre à Lyon — v13h -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1159,20 +1159,20 @@ function renderList() {
     const rapideGrp   = groups.filter(g => getGroupCat(g) === 'rapide');
     const accelereeGrp = groups.filter(g => getGroupCat(g) === 'acceleree');
     const normaleGrp  = groups.filter(g => getGroupCat(g) === 'normale');
+    const totalGrp = groups.length;
     const updBadgeVe = `<span class="last-update">Actualisé <span class="last-update-time">${fmtTime(lastLoadTime)}</span><button class="refresh-btn" onclick="manualRefresh()" title="Actualiser">↻</button></span>`;
-    html += `<div class="sec-lbl sec-lbl-gray" style="padding-bottom:2px">⚡ ${total} stations${updBadgeVe}</div>`;
     if (rapideGrp.length) {
-      html += `<div class="sec-lbl">⚡ Charge rapide (≥ 50 kW) · ${rapideGrp.length}</div><div class="parking-list">`;
+      html += `<div class="sec-lbl">⚡ Charge rapide (≥ 50 kW) · ${rapideGrp.length}${!accelereeGrp.length && !normaleGrp.length ? updBadgeVe : ''}</div><div class="parking-list">`;
       rapideGrp.forEach(g => html += borneGroupHTML(g, nearActive));
       html += `</div>`;
     }
     if (accelereeGrp.length) {
-      html += `<div class="sec-lbl">⚡ Charge accélérée (22–50 kW) · ${accelereeGrp.length}</div><div class="parking-list">`;
+      html += `<div class="sec-lbl">⚡ Charge accélérée (22–50 kW) · ${accelereeGrp.length}${!rapideGrp.length && !normaleGrp.length ? updBadgeVe : ''}</div><div class="parking-list">`;
       accelereeGrp.forEach(g => html += borneGroupHTML(g, nearActive));
       html += `</div>`;
     }
     if (normaleGrp.length) {
-      html += `<div class="sec-lbl">⚡ Charge normale (< 22 kW) · ${normaleGrp.length}</div><div class="parking-list">`;
+      html += `<div class="sec-lbl">⚡ Charge normale (< 22 kW) · ${normaleGrp.length}${!rapideGrp.length && !accelereeGrp.length ? updBadgeVe : ''}</div><div class="parking-list">`;
       normaleGrp.slice(0, 60).forEach(g => html += borneGroupHTML(g, nearActive));
       html += `</div>`;
     }
