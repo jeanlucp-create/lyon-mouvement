@@ -1,3 +1,4 @@
+    /* ── Version V13h ── */
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -88,8 +89,6 @@
 
     /* ── LISTE ── */
     .sec-lbl{font-size:9px;color:var(--amber);font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:8px 2px 4px;display:flex;align-items:center;gap:5px}
-    .list-header{display:flex;align-items:center;padding:6px 2px 2px;border-bottom:1px solid var(--border);margin-bottom:4px;min-height:28px}
-    .list-header-label{font-size:9px;color:var(--amber);font-weight:800;letter-spacing:.1em;text-transform:uppercase;flex:1}
     .last-update{margin-left:auto;font-size:9px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:4px;letter-spacing:0;text-transform:none}
     .refresh-btn{background:none;border:none;cursor:pointer;font-size:10px;color:var(--muted);padding:0 2px;font-family:'Nunito',sans-serif;font-weight:800;transition:color .2s}
     .refresh-btn:hover{color:var(--orange)}
@@ -422,10 +421,6 @@
 <div class="main">
   <div class="list-view" id="list-view">
     <div id="err-zone"></div>
-    <div id="list-header" class="list-header">
-      <span id="list-header-label" class="list-header-label"></span>
-      <span class="last-update">Actualisé <span id="last-update-time-fixed">—</span><button class="refresh-btn" onclick="manualRefresh()" title="Actualiser">↻</button></span>
-    </div>
     <div id="item-list"><div class="loading-msg">⏳ Chargement...</div></div>
   </div>
 
@@ -522,7 +517,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ─────────────────────────────────────────────────────────────
-// Me rendre à Lyon — v13i
+// Me rendre à Lyon — v13h
 // Historique :
 //   v12a  : Autopartage (Citiz LPA + Leo&Go)
 //   v13a  : Refonte filtres — zones contextuelles VOIR
@@ -534,7 +529,6 @@
 //   v13g  : Vélo'v/Bornes décochés par défaut en P+R/Parking,
 //           filtre recherche appliqué sur vue carte
 //   v13h  : Horodatage dernière actualisation + bouton ↻ par vue
-//   v13i  : Horodatage fixe (hors HTML généré), stable avec filtres/favoris
 // ─────────────────────────────────────────────────────────────
 const WORKER = 'https://me-rendre-a-lyon.jean-luc-perrotto.workers.dev';
 let data = {parkings:{tcl:[],operateurs:[]},velov:[],bornes:[]};
@@ -568,10 +562,10 @@ function fmtTime(d) {
 
 function refreshTimestamp() {
   lastLoadTime = new Date();
-  const t = fmtTime(lastLoadTime);
-  // Mettre à jour l'horodatage fixe
-  const fixed = document.getElementById('last-update-time-fixed');
-  if (fixed) fixed.textContent = t;
+  // Mettre à jour tous les éléments .last-update visibles
+  document.querySelectorAll('.last-update-time').forEach(el => {
+    el.textContent = fmtTime(lastLoadTime);
+  });
 }
 
 function manualRefresh() {
@@ -725,8 +719,8 @@ function renderAutopartage(el, q) {
       citiz = citiz.filter(s => haversine(userLat, userLng, s.lat, s.lng) <= distVal);
     }
 
-    updateListHeader('🚗 AUTOPARTAGE');
-    html += `<div class="ap-section-lbl">🚗 Citiz LPA · ${citiz.filter(s=>s.nb_dispo>0).length} stations avec véhicules</div>`;
+    const updBadgeAp = `<span class="last-update" style="margin-left:auto">Actualisé <span class="last-update-time">${fmtTime(lastLoadTime)}</span><button class="refresh-btn" onclick="manualRefresh()" title="Actualiser">↻</button></span>`;
+    html += `<div class="ap-section-lbl">🚗 Citiz LPA · ${citiz.filter(s=>s.nb_dispo>0).length} stations avec véhicules${updBadgeAp}</div>`;
     if (citiz.length) {
       citiz.forEach(s => {
         const hasDispo = s.nb_dispo > 0;
@@ -890,8 +884,6 @@ function switchSub(s) {
   // Masquer filter-block pour TCL
   const fb = document.getElementById('filter-block');
   if (fb) fb.style.display = s === 'tcl' ? 'none' : 'flex';
-  const lhdr = document.getElementById('list-header');
-  if (lhdr) lhdr.style.display = s === 'tcl' ? 'none' : 'flex';
   renderZone2(s);
   renderList();
   if (map) renderMap();
@@ -1024,13 +1016,6 @@ function toggleSearch() {
 }
 
 // ── PRÉSERVATION ACCORDÉONS ──
-function updateListHeader(label) {
-  const el = document.getElementById('list-header-label');
-  if (el) el.textContent = label;
-  const hdr = document.getElementById('list-header');
-  if (hdr) hdr.style.display = label ? 'flex' : 'none';
-}
-
 function setHtmlPreservingAccordions(el, html) {
   // Sauvegarder les IDs des accordéons ouverts
   const openIds = new Set();
@@ -1142,8 +1127,8 @@ function renderList() {
       favs.forEach(p => html += pkHTML(p));
       html += `</div>`;
     }
-    updateListHeader(`${lbl} · ${open} OUVERTS`);
-    html += `<div class="sec-lbl${favs.length ? ' sec-lbl-gray' : ''}">${lbl} · ${open} ouverts${favs.length ? '' : ctxBtns(sub)}</div><div class="parking-list">`;
+    const updBadge = `<span class="last-update">Actualisé <span class="last-update-time">${fmtTime(lastLoadTime)}</span><button class="refresh-btn" onclick="manualRefresh()" title="Actualiser">↻</button></span>`;
+    html += `<div class="sec-lbl${favs.length ? ' sec-lbl-gray' : ''}">${lbl} · ${open} ouverts${favs.length ? '' : ctxBtns(sub)}${updBadge}</div><div class="parking-list">`;
     rest.forEach(p => html += pkHTML(p));
     html += `</div>`;
   } else if (sub === 'vv') {
@@ -1157,8 +1142,8 @@ function renderList() {
       favs.forEach(v => html += vvHTML(v));
       html += `</div>`;
     }
-    updateListHeader(`🚲 VÉLO'V · ${open} STATIONS`);
-    html += `<div class="sec-lbl${favs.length ? ' sec-lbl-gray' : ''}">🚲 Vélo'v · ${open} stations avec vélos${favs.length ? '' : ctxBtns('vv')}</div><div class="parking-list">`;
+    const updBadgeVv = `<span class="last-update">Actualisé <span class="last-update-time">${fmtTime(lastLoadTime)}</span><button class="refresh-btn" onclick="manualRefresh()" title="Actualiser">↻</button></span>`;
+    html += `<div class="sec-lbl${favs.length ? ' sec-lbl-gray' : ''}">🚲 Vélo'v · ${open} stations avec vélos${favs.length ? '' : ctxBtns('vv')}${updBadgeVv}</div><div class="parking-list">`;
     rest.forEach(v => html += vvHTML(v));
     html += `</div>`;
   } else if (sub === 've') {
@@ -1174,7 +1159,8 @@ function renderList() {
     const rapideGrp   = groups.filter(g => getGroupCat(g) === 'rapide');
     const accelereeGrp = groups.filter(g => getGroupCat(g) === 'acceleree');
     const normaleGrp  = groups.filter(g => getGroupCat(g) === 'normale');
-    updateListHeader(`⚡ BORNES · ${total} STATIONS`);
+    const updBadgeVe = `<span class="last-update">Actualisé <span class="last-update-time">${fmtTime(lastLoadTime)}</span><button class="refresh-btn" onclick="manualRefresh()" title="Actualiser">↻</button></span>`;
+    html += `<div class="sec-lbl sec-lbl-gray" style="padding-bottom:2px">⚡ ${total} stations${updBadgeVe}</div>`;
     if (rapideGrp.length) {
       html += `<div class="sec-lbl">⚡ Charge rapide (≥ 50 kW) · ${rapideGrp.length}</div><div class="parking-list">`;
       rapideGrp.forEach(g => html += borneGroupHTML(g, nearActive));
