@@ -1147,34 +1147,28 @@ function renderList() {
     rest.forEach(v => html += vvHTML(v));
     html += `</div>`;
   } else if (sub === 've') {
-    // Regrouper par lieu/opérateur/accès, puis trier par catégorie
+    // Regrouper par adresse — toutes puissances confondues dans le même groupe
     const listWithDist = nearActive && userLat !== null
       ? list.map(b => ({...b, _dist: b._dist !== undefined ? b._dist : haversine(userLat, userLng, b.lat, b.lng)}))
       : list;
     const groups = buildGroups(listWithDist);
-    // Trier les groupes par catégorie dominante de leur première borne
-    const catOrder = {rapide:0, acceleree:1, normale:2};
-    const getGroupCat = g => g.stations[0]?.categorie || 'normale';
-    groups.sort((a, b) => (catOrder[getGroupCat(a)]||2) - (catOrder[getGroupCat(b)]||2));
-    const rapideGrp   = groups.filter(g => getGroupCat(g) === 'rapide');
-    const accelereeGrp = groups.filter(g => getGroupCat(g) === 'acceleree');
-    const normaleGrp  = groups.filter(g => getGroupCat(g) === 'normale');
-    const totalGrp = groups.length;
+    // Trier par distance si Près de moi, sinon par puissance max décroissante
+    if (nearActive && userLat !== null) {
+      groups.sort((a, b) => (a.dist||99999) - (b.dist||99999));
+    } else {
+      groups.sort((a, b) => {
+        const maxA = Math.max(...a.stations.map(s => s.puissance_max_kw||0));
+        const maxB = Math.max(...b.stations.map(s => s.puissance_max_kw||0));
+        return maxB - maxA;
+      });
+    }
+    const total = groups.length;
     const updBadgeVe = `<span class="last-update">Actualisé <span class="last-update-time">${fmtTime(lastLoadTime)}</span><button class="refresh-btn" onclick="manualRefresh()" title="Actualiser">↻</button></span>`;
-    if (rapideGrp.length) {
-      html += `<div class="sec-lbl">⚡ Charge rapide (≥ 50 kW) · ${rapideGrp.length}${!accelereeGrp.length && !normaleGrp.length ? updBadgeVe : ''}</div><div class="parking-list">`;
-      rapideGrp.forEach(g => html += borneGroupHTML(g, nearActive));
+    if (total) {
+      html += `<div class="sec-lbl">⚡ Bornes de recharge · ${total} stations${updBadgeVe}</div><div class="parking-list">`;
+      groups.slice(0, 80).forEach(g => html += borneGroupHTML(g, nearActive));
       html += `</div>`;
-    }
-    if (accelereeGrp.length) {
-      html += `<div class="sec-lbl">⚡ Charge accélérée (22–50 kW) · ${accelereeGrp.length}${!rapideGrp.length && !normaleGrp.length ? updBadgeVe : ''}</div><div class="parking-list">`;
-      accelereeGrp.forEach(g => html += borneGroupHTML(g, nearActive));
-      html += `</div>`;
-    }
-    if (normaleGrp.length) {
-      html += `<div class="sec-lbl">⚡ Charge normale (< 22 kW) · ${normaleGrp.length}${!rapideGrp.length && !accelereeGrp.length ? updBadgeVe : ''}</div><div class="parking-list">`;
-      normaleGrp.slice(0, 60).forEach(g => html += borneGroupHTML(g, nearActive));
-      html += `</div>`;
+      if (total > 80) html += `<div style="text-align:center;font-size:10px;color:var(--muted);padding:6px 0">… et ${total - 80} autres — affinez avec les filtres</div>`;
     }
     html += `<div style="text-align:center;font-size:10px;color:var(--muted);padding:8px 0">Source : Base nationale IRVE · transport.data.gouv.fr · Données statiques</div>`;
   }
